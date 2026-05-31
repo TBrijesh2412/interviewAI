@@ -1,0 +1,71 @@
+{% extends 'learning/base.html' %}
+
+{% block title %}{{ article.title }} - {{ subject.name }}{% endblock %}
+
+{% block learning_content %}
+<div class="learning-container">
+    <!-- Sidebar: Topics Navigation -->
+    <aside class="learning-sidebar">
+        <div style="margin-bottom: 2rem;">
+            <a href="{% url 'learning:learning_home' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                All Subjects
+            </a>
+        </div>
+        <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-secondary);">Topics</h3>
+        <div class="topic-menu">
+            {% for t in topics %}
+            <div class="topic-group {% if topic.id == t.id %}active{% endif %}">
+                <h4 class="topic-title">
+                    {{ t.title }}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.3s; {% if topic.id == t.id %}transform: rotate(180deg);{% endif %}">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </h4>
+                <ul class="topic-links">
+                    {% for art in t.articles.all %}
+                        <li>
+                            <a href="{% url 'learning:article_detail' subject.slug t.slug art.slug %}"
+                               class="{% if article.id == art.id %}active{% endif %}">
+                                {{ art.title }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <!-- Main Content: Article Body -->
+    <main class="learning-content">
+        <!-- Breadcrumbs -->
+        <nav style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+            <a href="{% url 'learning:subject_detail' subject.slug %}" style="color: var(--brand-green); text-decoration: none;">{{ subject.name }}</a>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <span>{{ topic.title }}</span>
+        </nav>
+
+        <article class="article-body">
+            <h1 style="margin-top: 0; font-size: 2.5rem;">{{ article.title }}</h1>
+            <div style="margin-bottom: 2rem; color: var(--text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 1rem;">
+                <span>Updated {{ article.updated_at|date:"M d, Y" }}</span>
+            </div>
+            
+            <!-- Rendered Markdown HTML -->
+            {{ article_html|safe }}
+            
+        </article>
+        
+        <!-- Navigation Footer (Previous / Next setup) can be implemented here -->
+        <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+            <!-- Next iteration: adding exact prev/next link logic -->
+        </div>
+    </main>
+</div>
+{% endblock %}

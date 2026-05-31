@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+
+{% block title %}Code Review Simulator — Interview AI{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
+<style>
+    .cr-page {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 2rem;
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 2rem;
+        height: calc(100vh - 10rem);
+    }
+
+    .diff-section {
+        background: var(--bg-card);
+        
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: var(--shadow-premium);
+    }
+
+    .diff-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .diff-content {
+        flex: 1;
+        overflow-y: auto;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        padding: 1rem 0;
+    }
+
+    .code-line {
+        display: flex;
+        padding: 0.15rem 1rem;
+        cursor: pointer;
+        transition: background 0.1s;
+    }
+
+    .code-line:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .code-line.has-comment {
+        background: rgba(233, 69, 96, 0.08);
+        border-right: 3px solid var(--accent-primary);
+    }
+
+    .line-number {
+        width: 40px;
+        flex-shrink: 0;
+        color: var(--text-muted);
+        text-align: right;
+        padding-right: 1rem;
+        user-select: none;
+    }
+
+    .line-content {
+        flex: 1;
+        white-space: pre-wrap;
+        color: var(--text-primary);
+    }
+
+    .comment-box {
+        margin: 0.5rem 1rem 0.5rem 3.5rem;
+        background: var(--bg-panel);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        display: none;
+    }
+
+    .comment-box.active {
+        display: block;
+    }
+
+    .comment-textarea {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        padding: 0.75rem;
+        font-family: inherit;
+        font-size: 0.9rem;
+        resize: vertical;
+        min-height: 80px;
+        margin-bottom: 0.75rem;
+        outline: none;
+    }
+
+    .comment-textarea:focus {
+        border-color: var(--accent-primary);
+    }
+
+    .wb-sidebar-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .feedback-card {
+        background: var(--bg-card);
+        
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .ai-score-large {
+        font-size: 3rem;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 1rem;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .suggestion-item {
+        display: flex;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .loader {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .pulse {
+        animation: pulse 1.5s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cr-page reveal">
+    <div class="diff-section reveal-up">
+        <div class="diff-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="var(--text-muted)" stroke-width="2">
+                        <circle cx="18" cy="18" r="3"></circle>
+                        <circle cx="6" cy="6" r="3"></circle>
+                        <path d="M13 6h3a2 2 0 0 1 2 2v7"></path>
+                        <line x1="6" y1="9" x2="6" y2="21"></line>
+                    </svg>
+                    <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">PR #42: Feature/User
+                        Orders View</h2>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); max-width: 600px;" id="promptText">{{ prompt
+                    }}</p>
+            </div>
+        </div>
+
+        <div class="diff-content" id="codeContainer">
+            <!-- Code lines injected via JS -->
+        </div>
+    </div>
+
+    <div class="wb-sidebar-section reveal-up">
+        <div class="feedback-card" id="feedbackArea">
+            <div class="empty-state" style="text-align: center; padding-top: 4rem;">
+                <div style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">Awaiting Review</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 2rem;">Click
+                    on any line of code to leave a comment. Identify bugs, security flaws, and performance issues.</p>
+
+                <button id="submitReviewBtn" class="btn-premium w-100" style="justify-content: center; padding: 1rem;">
+                    Submit PR Review
+                </button>
+            </div>
+
+            <div id="loader" class="loader">
+                <div class="pulse" style="color: var(--accent-primary); font-weight: 700;">Evaluating Review...</div>
+            </div>
+
+            <div id="results" style="display: none;">
+                <div class="ai-score-large" id="scoreValue">0.0</div>
+                <p
+                    style="text-align: center; color: var(--accent-primary); font-weight: 700; font-size: 0.8rem; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 0.1em;">
+                    Review Quality Score
+                </p>
+
+                <h4
+                    style="font-size: 0.9rem; font-weight: 800; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Engineering Feedback
+                </h4>
+                <p id="feedbackText"
+                    style="font-size: 0.95rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 2rem;">
+                </p>
+
+                <h4
+                    style="font-size: 0.9rem; font-weight: 800; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-success, #10b981);">
+                    Strengths
+                </h4>
+                <div id="strengthsList" style="margin-bottom: 2rem;"></div>
+
+                <h4
+                    style="font-size: 0.9rem; font-weight: 800; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-warning, #f59e0b);">
+                    Missed Bugs
+                </h4>
+                <div id="improvementsList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const rawCode = `{{ code|escapejs }}`;
+    const codeLines = rawCode.split('\n');
+    const container = document.getElementById('codeContainer');
+
+    // Store comments: lineNum -> text
+    const userComments = {};
+
+    function renderCode() {
+        container.innerHTML = '';
+        codeLines.forEach((line, index) => {
+            const lineNum = index + 1;
+
+            // The line itself
+            const lineDiv = document.createElement('div');
+            lineDiv.className = `code-line ${userComments[lineNum] ? 'has-comment' : ''}`;
+            lineDiv.innerHTML = `
+                <div class="line-number">${lineNum}</div>
+                <div class="line-content">${line.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+            `;
+
+            // The comment box (hidden by default)
+            const commentBox = document.createElement('div');
+            commentBox.className = `comment-box ${userComments[lineNum] !== undefined ? 'active' : ''}`;
+            commentBox.innerHTML = `
+                <textarea class="comment-textarea" placeholder="Leave a review comment for line ${lineNum}..." data-line="${lineNum}">${userComments[lineNum] || ''}</textarea>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button class="btn-secondary cancel-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" data-line="${lineNum}">Cancel</button>
+                    <button class="btn-primary save-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" data-line="${lineNum}">Save</button>
+                </div>
+            `;
+
+            // Interactions
+            lineDiv.addEventListener('click', () => {
+                if (!commentBox.classList.contains('active')) {
+                    commentBox.classList.add('active');
+                    commentBox.querySelector('textarea').focus();
+                }
+            });
+
+            const textarea = commentBox.querySelector('textarea');
+            const cancelBtn = commentBox.querySelector('.cancel-btn');
+            const saveBtn = commentBox.querySelector('.save-btn');
+
+            cancelBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!userComments[lineNum]) {
+                    commentBox.classList.remove('active');
+                    textarea.value = '';
+                } else {
+                    textarea.value = userComments[lineNum];
+                    commentBox.classList.remove('active');
+                }
+            });
+
+            saveBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const text = textarea.value.trim();
+                if (text) {
+                    userComments[lineNum] = text;
+                    lineDiv.classList.add('has-comment');
+                } else {
+                    delete userComments[lineNum];
+                    lineDiv.classList.remove('has-comment');
+                    commentBox.classList.remove('active');
+                }
+            });
+
+            container.appendChild(lineDiv);
+            container.appendChild(commentBox);
+        });
+    }
+
+    renderCode();
+
+    const submitBtn = document.getElementById('submitReviewBtn');
+    const emptyState = document.querySelector('.empty-state');
+    const loader = document.getElementById('loader');
+    const results = document.getElementById('results');
+
+    submitBtn.addEventListener('click', async () => {
+        const commentsArray = Object.keys(userComments).map(line => ({
+            line: parseInt(line),
+            comment: userComments[line]
+        }));
+
+        if (commentsArray.length === 0) {
+            alert("Please leave at least one comment before submitting.");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        emptyState.style.display = 'none';
+        loader.style.display = 'block';
+
+        try {
+            const response = await fetch("{% url 'evaluate_code_review' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({
+                    prompt: "{{ prompt|escapejs }}",
+                    code: rawCode,
+                    comments: commentsArray
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.error && !data.score) throw new Error(data.error);
+
+            document.getElementById("scoreValue").innerText = (data.score || 0).toFixed(1);
+            document.getElementById("feedbackText").innerText = data.feedback || "Review evaluated.";
+
+            const strengthsList = document.getElementById("strengthsList");
+            strengthsList.innerHTML = "";
+            (data.strengths || []).forEach(s => {
+                const div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.innerHTML = `<div style="color: var(--accent-success)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div><div>${s}</div>`;
+                strengthsList.appendChild(div);
+            });
+
+            const improvementsList = document.getElementById("improvementsList");
+            improvementsList.innerHTML = "";
+            (data.improvements || []).forEach(s => {
+                const div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.innerHTML = `<div style="color: var(--accent-warning)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div><div>${s}</div>`;
+                improvementsList.appendChild(div);
+            });
+
+            loader.style.display = 'none';
+            results.style.display = 'block';
+
+        } catch (err) {
+            alert("Evaluation Failed: " + err.message);
+            loader.style.display = 'none';
+            emptyState.style.display = 'block';
+            submitBtn.disabled = false;
+        }
+    });
+
+</script>
+{% endblock %}

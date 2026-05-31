@@ -1,0 +1,639 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<!-- CodeMirror CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/dracula.min.css">
+{% endblock %}
+
+{% block content %}
+<style>
+    .interview-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 120px); /* Adjust based on your header/footer */
+        max-width: 100%;
+        padding: 1.5rem 2.5rem;
+        gap: 1.5rem;
+        /* Anti-copy measures */
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-card);
+        padding: 1rem 1.5rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .timer-badge {
+        background: rgba(255, 45, 120, 0.1);
+        color: var(--error);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .timer-badge.warning {
+        background: rgba(217, 119, 6, 0.1);
+        color: var(--warning);
+    }
+
+    .main-workspace {
+        display: flex;
+        flex: 1;
+        gap: 1.5rem;
+        min-height: 0; /* Important for flex children scrolling */
+    }
+
+    .question-panel {
+        flex: 1;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+    .answer-panel {
+        flex: 1.5;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .question-meta {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .question-text {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+    }
+
+    .editor-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        min-height: 0;
+    }
+
+    .answer-textarea {
+        width: 100%;
+        height: 100%;
+        border: none;
+        resize: none;
+        padding: 1.5rem;
+        font-family: inherit;
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: var(--text-primary);
+        background: transparent;
+        outline: none;
+    }
+
+    /* CodeMirror specific tweaks */
+    .CodeMirror {
+        height: 100% !important;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 1rem;
+        display: none; /* Hidden by default, shown by JS */
+    }
+
+    .terminal-output {
+        height: 150px;
+        background: #111;
+        color: #ddd;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        padding: 1rem;
+        overflow-y: auto;
+        border-top: 1px solid var(--border-color);
+        display: none;
+    }
+
+    .terminal-output.visible {
+        display: block;
+    }
+
+    .terminal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background: #1a1a1a;
+        font-size: 0.75rem;
+        color: #888;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .controls-bar {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-panel);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .progress-dots {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--border-color);
+        transition: var(--transition);
+    }
+
+    .dot.active {
+        background: var(--brand-green);
+        transform: scale(1.2);
+    }
+    
+    .dot.completed {
+        background: var(--brand-green-light);
+    }
+
+    .eval-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .spinner {
+        width: 60px;
+        height: 60px;
+        border: 5px solid rgba(255, 255, 255, 0.1);
+        border-top-color: var(--brand-green);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 2rem;
+    }
+
+    /* Small Premium Button Overrides */
+    .btn-premium .btn-left {
+        padding: 0.5rem 1.2rem;
+        font-size: 0.85rem;
+    }
+
+    .btn-premium .btn-right {
+        padding: 0.5rem 0.8rem;
+    }
+
+</style>
+
+<div class="interview-container">
+    <div class="top-bar">
+        <div>
+            <h1 style="font-size: 1.2rem; margin: 0;">Mega Interview</h1>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">{{ session.experience_level }}</div>
+        </div>
+        
+        <div class="timer-badge" id="timerBadge">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span id="timeRemaining">00:00</span>
+        </div>
+        
+        <button class="btn btn-secondary" onclick="stopTest()" style="color: var(--error) !important; border-color: rgba(220, 38, 38, 0.3);">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+            </svg>
+            Stop Test
+        </button>
+    </div>
+
+    <div class="main-workspace">
+        <!-- Question Side -->
+        <div class="question-panel">
+            <div class="question-meta" id="questionCategory">HR / Behavioral</div>
+            <div class="question-text" id="questionText">Loading question...</div>
+            <div id="questionHint" style="font-size: 0.95rem; color: var(--text-secondary); background: var(--bg-panel); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--brand-orange); display: none;"></div>
+        </div>
+
+        <!-- Answer Side -->
+        <div class="answer-panel">
+            <div class="editor-wrapper">
+                <textarea id="answerInput" class="answer-textarea" placeholder="Type your answer here..."></textarea>
+                <!-- CodeMirror will inject itself here -->
+            </div>
+
+            <!-- Terminal for coding questions -->
+            <div id="terminalWrapper" style="display: none;">
+                <div class="terminal-header">
+                    <span>OUTPUT TERMINAL</span>
+                    <button onclick="clearTerminal()" style="background: none; border: none; color: #555; cursor: pointer; font-size: 0.7rem;">CLEAR</button>
+                </div>
+                <div id="terminal" class="terminal-output"></div>
+            </div>
+
+            <div class="controls-bar">
+                <div class="progress-dots" id="progressDots">
+                    <!-- Dots generated by JS -->
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn-premium btn-secondary" id="runCodeBtn" onclick="runCode()" style="display: none;">
+                        <span class="btn-left">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-right: 8px;">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            Run Code
+                        </span>
+                        <span class="btn-right">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="13 17 18 12 13 7"></polyline>
+                                <polyline points="6 17 11 12 6 7"></polyline>
+                            </svg>
+                        </span>
+                    </button>
+                    <button class="btn-premium" id="nextBtn" onclick="nextQuestion()">
+                        <span class="btn-left">Next Question</span>
+                        <span class="btn-right">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="5 12 19 12"/>
+                                <polyline points="12 5 19 12 12 19"/>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Evaluation Loading Overlay -->
+<div class="eval-overlay" id="evalOverlay">
+    <div class="spinner"></div>
+    <h2 style="margin-bottom: 0.5rem; font-size: 2rem;">Evaluating your Interview</h2>
+    <p style="color: rgba(255, 255, 255, 0.7); max-width: 500px; text-align: center; line-height: 1.6;">
+        Our AI is analyzing your answers for correctness, communication, and technical depth. We are preparing your final score and topics to learn. Please don't close this window.
+    </p>
+</div>
+
+<!-- Anti-Cheat Overlay -->
+<div class="eval-overlay" id="antiCheatOverlay" style="background: rgba(220, 38, 38, 0.9);">
+    <svg width="60" height="60" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom: 2rem;">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <h2 style="margin-bottom: 0.5rem; font-size: 2rem;">Warning: Screen Switch Detected</h2>
+    <p style="color: rgba(255, 255, 255, 0.9); max-width: 500px; text-align: center; line-height: 1.6; margin-bottom: 2rem;" id="antiCheatText">
+        Please do not switch tabs or windows during this interview. We enforce strict anti-cheat measures.
+    </p>
+    <button class="btn" style="background: white; color: var(--error);" onclick="dismissWarning()">I Understand</button>
+</div>
+
+<!-- CodeMirror Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/python/python.min.js"></script>
+
+{{ questions|json_script:"questionsData" }}
+
+<script>
+    const questions = JSON.parse(document.getElementById('questionsData').textContent);
+    let currentIndex = 0;
+    const userAnswers = {};
+    let timerInterval;
+    let timeLeft = 0; // in seconds
+    
+    // CodeMirror Instance
+    let cmInstance = null;
+    
+    // Anti-Cheat Variables
+    let warningCount = 0;
+    const MAX_WARNINGS = 3;
+
+    // Prevent Copy/Paste/Cut/Right-Click
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+    
+    document.addEventListener("copy", (e) => {
+        e.preventDefault();
+        alert("Copying is disabled during the interview.");
+    });
+    
+    document.addEventListener("cut", (e) => {
+        e.preventDefault();
+        alert("Cutting is disabled during the interview.");
+    });
+    
+    document.addEventListener("paste", (e) => {
+        e.preventDefault();
+        alert("Pasting answers is disabled. Please type your own solution.");
+    });
+
+    // Listen for tab switching
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === 'hidden') {
+            handleCheatAttempt();
+        }
+    });
+    
+    function handleCheatAttempt() {
+        if (document.getElementById('evalOverlay').style.display === 'flex') return; // already end
+        
+        warningCount++;
+        const overlay = document.getElementById('antiCheatOverlay');
+        const text = document.getElementById('antiCheatText');
+        
+        if (warningCount >= MAX_WARNINGS) {
+            alert("Maximum warnings reached. Your interview is being automatically submitted.");
+            stopTest();
+        } else {
+            text.innerHTML = `Warning ${warningCount} of ${MAX_WARNINGS}: You switched away from the interview screen. <br>If you do this ${MAX_WARNINGS - warningCount} more time(s), your interview will automatically end.`;
+            overlay.style.display = 'flex';
+        }
+    }
+    
+    function dismissWarning() {
+        document.getElementById('antiCheatOverlay').style.display = 'none';
+    }
+
+    // DOM Elements
+    const qCategory = document.getElementById('questionCategory');
+    const qText = document.getElementById('questionText');
+    const qHint = document.getElementById('questionHint');
+    const aInput = document.getElementById('answerInput');
+    const nextBtn = document.getElementById('nextBtn');
+    const runCodeBtn = document.getElementById('runCodeBtn');
+    const terminalWrapper = document.getElementById('terminalWrapper');
+    const terminal = document.getElementById('terminal');
+    const dotsContainer = document.getElementById('progressDots');
+    const timeDisplay = document.getElementById('timeRemaining');
+    const timerBadge = document.getElementById('timerBadge');
+
+    function init() {
+        // Create dots
+        questions.forEach((q, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${i}`;
+            dotsContainer.appendChild(dot);
+        });
+        
+        // Initialize CodeMirror (hidden initially)
+        cmInstance = CodeMirror.fromTextArea(aInput, {
+            mode: "python",
+            theme: "dracula",
+            lineNumbers: true,
+            indentUnit: 4,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            tabSize: 4,
+        });
+        
+        // Hide CM wrapper initially
+        cmInstance.getWrapperElement().style.display = 'none';
+
+        loadQuestion(0);
+    }
+
+    function loadQuestion(index) {
+        if (index >= questions.length) {
+            submitInterview();
+            return;
+        }
+
+        // Save previous answer if exists
+        if (index > currentIndex) {
+            saveCurrentAnswer();
+        }
+
+        currentIndex = index;
+        const q = questions[currentIndex];
+
+        // Update UI
+        qCategory.textContent = `${q.category} Question ${currentIndex + 1} of ${questions.length}`;
+        qText.textContent = q.question;
+        
+        const storedAnswer = userAnswers[q.id] || "";
+
+        // Setup IDE mode if coding
+        if (q.type === 'coding') {
+            aInput.style.display = 'none';
+            cmInstance.getWrapperElement().style.display = 'block';
+            
+            let val = storedAnswer;
+            if (!val && q.boilerplate) {
+                val = q.boilerplate;
+            }
+            cmInstance.setValue(val);
+            setTimeout(() => cmInstance.refresh(), 50);
+            
+            runCodeBtn.style.display = 'inline-flex';
+            terminalWrapper.style.display = 'block';
+        } else {
+            cmInstance.getWrapperElement().style.display = 'none';
+            aInput.style.display = 'block';
+            aInput.value = storedAnswer;
+            aInput.placeholder = "Type your comprehensive answer here...";
+            
+            runCodeBtn.style.display = 'none';
+            terminalWrapper.style.display = 'none';
+        }
+
+        // Update dots
+        document.querySelectorAll('.dot').forEach((dot, i) => {
+            dot.classList.remove('active');
+            if (i < currentIndex) dot.classList.add('completed');
+            if (i === currentIndex) dot.classList.add('active');
+        });
+
+        // Update Button text
+        if (currentIndex === questions.length - 1) {
+            nextBtn.innerHTML = `
+                <span class="btn-left">Submit Interview</span>
+                <span class="btn-right">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M5 12l5 5L20 7"/>
+                    </svg>
+                </span>`;
+            nextBtn.className = "btn-premium";
+        } else {
+            nextBtn.innerHTML = `
+                <span class="btn-left">Next Question</span>
+                <span class="btn-right">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <polyline points="5 12 19 12"/>
+                        <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </span>`;
+            nextBtn.className = "btn-premium";
+        }
+
+        // Set Timer
+        clearInterval(timerInterval);
+        if (q.type === 'hr') timeLeft = 120;
+        else if (q.type === 'technical') timeLeft = 180;
+        else if (q.type === 'coding') timeLeft = 600;
+        else timeLeft = 180;
+
+        updateTimerDisplay();
+        timerInterval = setInterval(tickTimer, 1000);
+    }
+
+    async function runCode() {
+        const code = cmInstance.getValue();
+        if (!code.trim()) return;
+
+        runCodeBtn.disabled = true;
+        addToTerminal("> Executing Python code...\n", "info");
+        terminal.classList.add('visible');
+
+        try {
+            const response = await fetch("/mega-interview/run-code/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ code: code, language: "python" })
+            });
+            const data = await response.json();
+
+            if (data.error) {
+                addToTerminal(`Error: ${data.error}\n`, "error");
+            } else {
+                if (data.stdout) addToTerminal(data.stdout, "stdout");
+                if (data.stderr) addToTerminal(data.stderr, "stderr");
+                if (!data.stdout && !data.stderr) addToTerminal("(Code executed with no output)\n", "info");
+                addToTerminal(`\nProcess finished with exit code ${data.returncode}\n`, "info");
+            }
+        } catch (e) {
+            addToTerminal(`Network error: ${e.message}\n`, "error");
+        } finally {
+            runCodeBtn.disabled = false;
+        }
+    }
+
+    function addToTerminal(text, type) {
+        const span = document.createElement('span');
+        if (type === 'error' || type === 'stderr') span.style.color = '#ff5555';
+        if (type === 'info') span.style.color = '#50fa7b';
+        span.textContent = text;
+        terminal.appendChild(span);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function clearTerminal() {
+        terminal.innerHTML = "";
+    }
+
+    function tickTimer() {
+        timeLeft--;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timeDisplay.textContent = "00:00";
+            nextQuestion();
+        } else {
+            updateTimerDisplay();
+        }
+    }
+
+    function updateTimerDisplay() {
+        const m = Math.floor(timeLeft / 60);
+        const s = timeLeft % 60;
+        timeDisplay.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        
+        if (timeLeft < 30) {
+            timerBadge.classList.add('warning');
+            timerBadge.style.color = 'var(--error)';
+        } else {
+            timerBadge.classList.remove('warning');
+            timerBadge.style.color = '';
+        }
+    }
+
+    function saveCurrentAnswer() {
+        const q = questions[currentIndex];
+        if (q.type === 'coding') {
+            userAnswers[q.id] = cmInstance.getValue();
+        } else {
+            userAnswers[q.id] = aInput.value;
+        }
+    }
+
+    function nextQuestion() {
+        saveCurrentAnswer();
+        loadQuestion(currentIndex + 1);
+    }
+
+    function stopTest() {
+        if(confirm("Are you sure you want to stop the test? Nothing will be evaluated.")) {
+            window.location.href = "{% url 'mega_interview_setup' %}";
+        }
+    }
+
+    async function submitInterview() {
+        clearInterval(timerInterval);
+        document.getElementById('evalOverlay').style.display = 'flex';
+
+        try {
+            const response = await fetch(`/mega-interview/{{ session.id }}/evaluate/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ answers: userAnswers })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                window.location.href = data.redirect_url;
+            } else {
+                alert("Evaluation failed: " + data.error);
+                document.getElementById('evalOverlay').style.display = 'none';
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error during evaluation.");
+            document.getElementById('evalOverlay').style.display = 'none';
+        }
+    }
+
+    // Start
+    init();
+
+</script>
+{% endblock %}

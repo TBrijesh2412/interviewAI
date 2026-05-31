@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}Technical Whiteboard — Interview AI{% endblock %}
+
+{% block extra_head %}
+<!-- CodeMirror CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/dracula.min.css">
+<style>
+    .whiteboard-page {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 2rem;
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 2rem;
+        height: calc(100vh - 10rem);
+    }
+
+    .editor-section {
+        background: var(--bg-card);
+        
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: var(--shadow-premium);
+    }
+
+    .editor-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .problem-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .language-select {
+        background: var(--bg-panel);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 0.85rem;
+        outline: none;
+    }
+
+    .CodeMirror {
+        flex: 1;
+        height: 100% !important;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .wb-sidebar-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .feedback-card {
+        background: var(--bg-card);
+        
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .ai-score-large {
+        font-size: 3rem;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 1rem;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .suggestion-item {
+        display: flex;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .loader {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .pulse {
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 0.6;
+        }
+
+        50% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0.6;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="whiteboard-page reveal">
+    <div class="editor-section reveal-up">
+        <div class="editor-header">
+            <div class="problem-info">
+                <div style="color: var(--accent-primary)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                </div>
+                <h2 style="font-size: 1.1rem; font-weight: 700;">{{ problem|default:"Design Search Engine" }}</h2>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <select id="languageSelect" class="language-select">
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="cpp">C++</option>
+                    <option value="java">Java</option>
+                </select>
+                <button id="runBtn" class="btn-premium"
+                    style="height: auto; font-size: 0.85rem; border: none; background: transparent; padding: 0;">
+                    <div class="btn-left" style="padding: 0.6rem 1.25rem;">
+                        Run AI Review
+                    </div>
+                    <div class="btn-right" style="padding: 0.6rem 0.8rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+        <textarea id="editor">{{ boilerplate|default:"# Write your code here..." }}</textarea>
+    </div>
+
+    <div class="wb-sidebar-section reveal-up">
+        <div class="feedback-card" id="feedbackArea">
+            <div class="empty-state" style="text-align: center; padding-top: 4rem;">
+                <div style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">AI Ready</h3>
+                <p style="color: var(--text-primary); font-size: 0.9rem; line-height: 1.6;">Solve the problem in the
+                    editor and click 'Run AI Review' for deep feedback on complexity and quality.</p>
+            </div>
+
+            <div id="loader" class="loader">
+                <div class="pulse" style="color: var(--accent-primary); font-weight: 700;">Analyzing your code...</div>
+            </div>
+
+            <div id="results" style="display: none;">
+                <div class="ai-score-large" id="scoreValue">0.0</div>
+                <p id="complexityValue"
+                    style="text-align: center; color: var(--accent-primary); font-weight: 700; font-size: 0.8rem; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 0.1em;">
+                </p>
+
+                <h4
+                    style="font-size: 0.9rem; font-weight: 800; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                    AI Feedback</h4>
+                <p id="feedbackText"
+                    style="font-size: 0.95rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 2rem;">
+                </p>
+
+                <h4
+                    style="font-size: 0.9rem; font-weight: 800; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Key Suggestions</h4>
+                <div id="suggestionsList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CodeMirror Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/clike/clike.min.js"></script>
+
+<script>
+    const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+        lineNumbers: true,
+        theme: "dracula",
+        mode: "python",
+        indentUnit: 4,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        tabSize: 4,
+    });
+
+    // Refresh editor after reveal animation for proper rendering
+    setTimeout(() => editor.refresh(), 800);
+
+    const languageSelect = document.getElementById("languageSelect");
+    languageSelect.addEventListener("change", function () {
+        const mode = this.value === "cpp" || this.value === "java" ? "text/x-c++src" : this.value;
+        editor.setOption("mode", mode);
+    });
+
+    const runBtn = document.getElementById("runBtn");
+    const loader = document.getElementById("loader");
+    const results = document.getElementById("results");
+    const emptyState = document.querySelector(".empty-state");
+
+    runBtn.addEventListener("click", async function () {
+        const code = editor.getValue();
+        const language = languageSelect.value;
+
+        runBtn.disabled = true;
+        emptyState.style.display = "none";
+        results.style.display = "none";
+        loader.style.display = "block";
+
+        try {
+            const response = await fetch("{% url 'evaluate_code' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({
+                    code: code,
+                    language: language,
+                    problem: "{{ problem|escapejs }}"
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.error && !data.score) throw new Error(data.error);
+
+            document.getElementById("scoreValue").innerText = data.score.toFixed(1);
+            document.getElementById("complexityValue").innerText = data.complexity;
+            document.getElementById("feedbackText").innerText = data.feedback;
+
+            const list = document.getElementById("suggestionsList");
+            list.innerHTML = "";
+            data.suggestions.forEach(s => {
+                const div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.innerHTML = `
+                    <div style="color: var(--accent-primary)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <div>${s}</div>
+                `;
+                list.appendChild(div);
+            });
+
+            loader.style.display = "none";
+            results.style.display = "block";
+        } catch (err) {
+            alert("Evaluation failed: " + err.message);
+            loader.style.display = "none";
+            emptyState.style.display = "block";
+        } finally {
+            runBtn.disabled = false;
+        }
+    });
+</script>
+{% endblock %}

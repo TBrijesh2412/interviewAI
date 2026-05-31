@@ -1,0 +1,763 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<style>
+    .report-page {
+        padding: 0;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    .report-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        min-height: calc(100vh - 12rem);
+        overflow: hidden;
+        box-shadow: var(--shadow-premium);
+    }
+
+    @media (max-width: 1100px) {
+        .report-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .report-sidebar {
+            border-left: none !important;
+            border-top: 1px solid var(--border-color);
+            padding: 2rem !important;
+        }
+    }
+
+    /* Gap dot severity colors */
+    .gap-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .severity-high {
+        background: var(--error);
+    }
+
+    .severity-medium {
+        background: var(--warning);
+    }
+
+    .severity-low {
+        background: var(--info);
+    }
+
+    /* Center Content */
+    .report-content {
+        padding: 3rem;
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    @media (max-width: 768px) {
+        .report-content {
+            padding: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.4rem !important;
+        }
+    }
+
+    .section-header {
+        margin-bottom: 2.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.75rem;
+        letter-spacing: -0.02em;
+    }
+
+    .content-section {
+        display: none;
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .content-section.active {
+        display: block;
+    }
+
+    /* Question Cards */
+    .q-card {
+        background: var(--bg-panel);
+        
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        margin-bottom: 1.25rem;
+        transition: var(--transition);
+        overflow: hidden;
+    }
+
+    .q-card:hover {
+        border-color: var(--border-hover);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .q-header {
+        padding: 1.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: flex-start;
+        gap: 1.25rem;
+    }
+
+    .q-index {
+        background: var(--accent-gradient);
+        color: white;
+        padding: 0.25rem 0.6rem;
+        border-radius: 8px;
+        font-weight: 800;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+    }
+
+    .q-body {
+        padding: 0 1.5rem 1.5rem;
+        display: none;
+        border-top: 1px solid var(--border-color);
+        padding-top: 1.5rem;
+        background: rgba(255, 255, 255, 0.548);
+    }
+
+    .q-tag {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 0.25rem 0.6rem;
+        border-radius: 6px;
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+
+    /* Right Sidebar */
+    .report-sidebar {
+        padding: 2.5rem 2rem;
+        border-left: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.01);
+        display: flex;
+        flex-direction: column;
+        gap: 3rem;
+    }
+
+    .score-container {
+        text-align: center;
+    }
+
+    .score-circle {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .score-svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+
+    .score-bg {
+        fill: none;
+        stroke: var(--border-color);
+        stroke-width: 8;
+    }
+
+    .score-fill {
+        fill: none;
+        stroke: var(--accent-primary);
+        stroke-width: 8;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1s ease-out;
+    }
+
+    .score-value {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.05em;
+        z-index: 1;
+    }
+
+    .score-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        z-index: 1;
+    }
+
+    /* Roadmap Timeline */
+    .timeline {
+        position: relative;
+        padding-left: 2.5rem;
+    }
+
+    .timeline::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(180deg, var(--accent-primary) 0%, var(--bg-panel) 100%);
+        border-radius: 2px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 3rem;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -2.85rem;
+        top: 0.25rem;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 3px solid var(--accent-primary);
+        box-shadow: 0 0 0 5px rgba(255, 45, 120, 0.1);
+    }
+
+    .skill-tag {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+<nav class="report-nav" style="border: none; padding: 0.5rem 0.75rem;">
+    <p class="sidebar-section-label">Sections</p>
+    <button class="sidebar-link active" onclick="switchTab('technical', this)"
+        style="width: 100%; border: none; background: none; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: left;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        Technical
+    </button>
+    <button class="sidebar-link" onclick="switchTab('behavioral', this)"
+        style="width: 100%; border: none; background: none; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: left;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Behavioral
+    </button>
+    <button class="sidebar-link" onclick="switchTab('coding', this)"
+        style="width: 100%; border: none; background: none; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: left;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        Coding
+    </button>
+    <button class="sidebar-link" onclick="switchTab('roadmap', this)"
+        style="width: 100%; border: none; background: none; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: left;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M9 18l6-6-6-6"></path>
+        </svg>
+        Road Map
+    </button>
+    <button class="sidebar-link" onclick="switchTab('ats-scanner', this)"
+        style="width: 100%; border: none; background: none; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: left;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        ATS Scanner MVP
+    </button>
+
+    <p class="sidebar-section-label" style="margin-top: 1.5rem;">Career Tools</p>
+    <a href="{% url 'cover_letter' report.id %}" class="sidebar-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        Cover Letter
+    </a>
+
+    <button class="sidebar-link" onclick="switchTab('notes', this)"
+        style="width: 100%; border: none; background: none; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: left;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        </svg>
+        My Notes
+    </button>
+
+    <div style="margin-top: 1.5rem; padding: 0.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <a href="{% url 'mock_interview_start' report.id %}" class="btn-premium" style="width: 100%;">
+            <div class="btn-left" style="flex: 1; justify-content: center; font-size: 0.85rem; padding: 0.75rem 1rem;">
+                Mock Interview</div>
+            <div class="btn-right" style="padding: 0.75rem 0.8rem;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+            </div>
+        </a>
+
+        <a href="{% url 'resume_builder' report.id %}" class="btn-premium btn-secondary" style="width: 100%;">
+            <div class="btn-left" style="flex: 1; justify-content: center; font-size: 0.85rem; padding: 0.75rem 1rem;">✨
+                AI Resume</div>
+            <div class="btn-right" style="padding: 0.75rem 0.8rem;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <line x1="7" y1="17" x2="17" y2="17"></line>
+                    <polyline points="7 7 12 12 17 7"></polyline>
+                </svg>
+            </div>
+        </a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="report-page">
+    <div class="report-layout">
+        <main class="report-content">
+            <section id="technical" class="content-section active">
+                <div class="section-header">
+                    <h2>Technical Questions</h2>
+                    <span class="badge badge-accent">{{ report.technical_questions|length }} ITEMS</span>
+                </div>
+                <div class="q-list">
+                    {% for q in report.technical_questions %}
+                    <div class="q-card">
+                        <div class="q-header" onclick="toggleAccordion(this)">
+                            <span class="q-index">Q{{ forloop.counter }}</span>
+                            <p style="flex: 1; font-weight: 600; font-size: 1.05rem; line-height: 1.5;">{{ q.question }}
+                            </p>
+                            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                style="transition: transform 0.3s; color: var(--text-muted);">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="q-body">
+                            <div style="margin-bottom: 2rem;">
+                                <span class="q-tag"
+                                    style="color: var(--accent-secondary); background: rgba(139, 92, 246, 0.1);">Question
+                                    Intention</span>
+                                <p style="color: var(--text-primary); font-size: 0.95rem; line-height: 1.7;">
+                                    {{ q.intention }}
+                                </p>
+                            </div>
+                            <div>
+                                <span class="q-tag"
+                                    style="color: var(--success); background: rgba(16, 185, 129, 0.1);">Expert Model
+                                    Answer</span>
+                                <div
+                                    style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                                    <p style="font-size: 1rem; line-height: 1.7; color: var(--text-primary);">
+                                        {{ q.answer }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section id="behavioral" class="content-section">
+                <div class="section-header">
+                    <h2>Behavioral Questions</h2>
+                    <span class="badge badge-accent">{{ report.behavioral_questions|length }} ITEMS</span>
+                </div>
+                <div class="q-list">
+                    {% for q in report.behavioral_questions %}
+                    <div class="q-card">
+                        <div class="q-header" onclick="toggleAccordion(this)">
+                            <span class="q-index">Q{{ forloop.counter }}</span>
+                            <p style="flex: 1; font-weight: 600; font-size: 1.05rem; line-height: 1.5;">{{ q.question }}
+                            </p>
+                            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                style="transition: transform 0.3s; color: var(--text-muted);">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="q-body">
+                            <div style="margin-bottom: 2rem;">
+                                <span class="q-tag"
+                                    style="color: var(--accent-secondary); background: rgba(139, 92, 246, 0.1);">Question
+                                    Intention</span>
+                                <p style="color: var(--text-primary); font-size: 0.95rem; line-height: 1.7;">
+                                    {{ q.intention }}
+                                </p>
+                            </div>
+                            <div>
+                                <span class="q-tag"
+                                    style="color: var(--success); background: rgba(16, 185, 129, 0.1);">Expert Model
+                                    Answer</span>
+                                <div
+                                    style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                                    <p style="font-size: 1rem; line-height: 1.7; color: var(--text-primary);">
+                                        {{ q.answer }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section id="coding" class="content-section">
+                <div class="section-header">
+                    <h2>Coding Questions</h2>
+                    <span class="badge badge-accent">{{ report.coding_questions|length }} ITEMS</span>
+                </div>
+                <div class="q-list">
+                    {% for q in report.coding_questions %}
+                    <div class="q-card">
+                        <div class="q-header" onclick="toggleAccordion(this)">
+                            <span class="q-index">CODE {{ forloop.counter }}</span>
+                            <p style="flex: 1; font-weight: 600; font-size: 1.05rem; line-height: 1.5;">{{ q.question }}
+                            </p>
+                            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                style="transition: transform 0.3s; color: var(--text-muted);">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="q-body">
+                            <div style="margin-bottom: 2rem;">
+                                <span class="q-tag"
+                                    style="color: var(--accent-secondary); background: rgba(139, 92, 246, 0.1);">Question
+                                    Intention</span>
+                                <p style="color: var(--text-primary); font-size: 0.95rem; line-height: 1.7;">
+                                    {{ q.intention }}
+                                </p>
+                            </div>
+                            <div>
+                                <span class="q-tag"
+                                    style="color: var(--success); background: rgba(16, 185, 129, 0.1);">Expert Solution
+                                    (Python)</span>
+                                <div
+                                    style="background: #1e1e1e; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); font-family: 'JetBrains Mono', monospace;">
+                                    <pre
+                                        style="font-size: 0.9rem; line-height: 1.6; color: #d4d4d4; white-space: pre-wrap;">{{ q.answer }}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section id="roadmap" class="content-section">
+                <div class="section-header">
+                    <h2>Preparation Journey</h2>
+                    <span class="badge badge-accent">{{ report.preparation_plan|length }} DAYS</span>
+                </div>
+                <div class="timeline">
+                    {% for day in report.preparation_plan %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div style="margin-bottom: 1.5rem;">
+                            <span class="badge badge-accent" style="margin-bottom: 0.75rem;">DAY {{ day.day }}</span>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">
+                                {{ day.focus }}
+                            </h3>
+                        </div>
+                        <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem;">
+                            {% for task in day.tasks %}
+                            <li style="display: flex; gap: 1rem; align-items: flex-start;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    style="color: var(--success); margin-top: 0.25rem; flex-shrink: 0;">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span style="color: var(--brand-green); line-height: 1.5;">{{ task }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section id="ats-scanner" class="content-section">
+                <div class="section-header">
+                    <h2>ATS Score Predictor</h2>
+                    <span class="badge badge-accent"
+                        style="background: rgba(99, 102, 241, 0.1); color: #6366f1; border-color: rgba(99, 102, 241, 0.2);">ML
+                        POWERED</span>
+                </div>
+
+                <div
+                    style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 16px; padding: 2rem; margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Resume ATS Optimization Score</h3>
+                    <div style="display: flex; align-items: center; gap: 2rem;">
+                        <div class="score-circle" style="width: 140px; height: 140px; margin: 0;">
+                            <svg class="score-svg" viewBox="0 0 100 100">
+                                <circle class="score-bg" cx="50" cy="50" r="45"></circle>
+                                <circle class="score-fill ats-score-fill" cx="50" cy="50" r="45"
+                                    stroke-dasharray="282.7" stroke-dashoffset="282.7"
+                                    style="stroke: #6366f1; fill: none; stroke-linecap: round; stroke-width: 8; transition: stroke-dashoffset 1s ease-out;">
+                                </circle>
+                            </svg>
+                            <span class="score-value" style="font-size: 2.5rem;">{{ report.ats_score }}</span>
+                            <span class="score-label">MATCH</span>
+                        </div>
+                        <div>
+                            <p style="color: var(--text-primary); line-height: 1.6; max-width: 400px;">
+                                This score is calculated using standard Applicant Tracking System (ATS) methodology.
+                                We combine <strong>TF-IDF exact keyword density</strong> with <strong>semantic sentence
+                                    transformers</strong>
+                                to measure how well your uploaded resume aligns with the core requirements of this
+                                specific job
+                                description.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <!-- Matching Keywords -->
+                    <div
+                        style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem;">
+                        <h4
+                            style="margin-bottom: 1rem; color: var(--success); display: flex; align-items: center; gap: 0.5rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Keywords Found
+                        </h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            {% for kw in report.ats_matching_keywords %}
+                            <span
+                                style="background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+                                {{ kw }}
+                            </span>
+                            {% empty %}
+                            <p style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">No exact
+                                keywords
+                                found. Consider tailoring your resume.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Missing Keywords -->
+                    <div
+                        style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem;">
+                        <h4
+                            style="margin-bottom: 1rem; color: var(--error); display: flex; align-items: center; gap: 0.5rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            Keywords Missing
+                        </h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            {% for kw in report.ats_missing_keywords %}
+                            <span
+                                style="background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.2); padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+                                {{ kw }}
+                            </span>
+                            {% empty %}
+                            <p style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">Great job! Your
+                                resume
+                                covers all extracted keywords.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="notes" class="content-section">
+                <div class="section-header">
+                    <h2>My Notes</h2>
+                    <span id="notesSaveStatus"
+                        style="font-size:0.8rem; color: var(--text-muted); font-weight:600;">Auto-saved</span>
+                </div>
+                <div style="position: relative;">
+                    <textarea id="notesTextarea"
+                        placeholder="Write your personal reflections, key takeaways, or areas to focus on..."
+                        style="width: 100%; min-height: 400px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem; color: var(--text-primary); font-family: inherit; font-size: 0.95rem; line-height: 1.7; resize: vertical; transition: var(--transition);">{{ report.notes }}</textarea>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem;">Notes are automatically saved
+                    as you type.</p>
+            </section>
+        </main>
+
+        <aside class="report-sidebar">
+            <div class="score-container">
+                <p class="nav-group-label" style="margin-bottom: 1.5rem;">Match Score</p>
+                <div class="score-circle">
+                    <svg class="score-svg" viewBox="0 0 100 100">
+                        <circle class="score-bg" cx="50" cy="50" r="45" style="stroke: rgba(74,222,128,0.15);"></circle>
+                        <circle class="score-fill match-score-fill" cx="50" cy="50" r="45" stroke-dasharray="282.7"
+                            stroke-dashoffset="282.7" style="stroke: var(--accent-primary);"></circle>
+                    </svg>
+                    <span class="score-value">{{ report.match_score }}</span>
+                    <span class="score-label">PERCENT</span>
+                </div>
+                <div
+                    style="padding: 1rem; border-radius: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.1);">
+                    <p style="font-weight: 700; color: var(--success); font-size: 0.9rem;">
+                        {% if report.match_score >= 80 %}
+                        Excellent Match
+                        {% elif report.match_score >= 60 %}
+                        Moderate Match
+                        {% else %}
+                        Significant Gaps
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <p class="nav-group-label" style="margin-bottom: 1.25rem;">Skill Gaps</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                    {% for gap in report.skill_gaps %}
+                    <div class="skill-tag">
+                        <div class="gap-dot severity-{{ gap.severity|default:'low' }}"></div>
+                        {{ gap.skill }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function toggleAccordion(header) {
+        const body = header.nextElementSibling;
+        const chevron = header.querySelector('.chevron');
+        const isVisible = (body.style.display === 'block');
+
+        if (isVisible) {
+            body.style.display = 'none';
+            chevron.style.transform = 'rotate(0deg)';
+        } else {
+            body.style.display = 'block';
+            chevron.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    // Animate Score Circle
+    document.addEventListener('DOMContentLoaded', () => {
+        const animateCircle = (selector, scoreValue) => {
+            const circle = document.querySelector(selector);
+            if (circle) {
+                const score = parseFloat(scoreValue) || 0;
+                const circumference = 2 * Math.PI * 45; // = 282.74
+                const offset = circumference - (score / 100 * circumference);
+
+                // Set initial state (no arc)
+                circle.style.strokeDasharray = `${circumference} ${circumference}`;
+                circle.style.strokeDashoffset = `${circumference}`;
+                circle.style.transition = 'none';
+
+                // Trigger animation on next frame
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        circle.style.transition = 'stroke-dashoffset 1.2s ease-out';
+                        circle.style.strokeDashoffset = `${offset}`;
+                    });
+                });
+            }
+        };
+
+        animateCircle('.match-score-fill', "{{ report.match_score }}");
+        animateCircle('.ats-score-fill', "{{ report.ats_score }}");
+    });
+
+    // Auto-save notes
+    const notesTA = document.getElementById('notesTextarea');
+    const notesSaveStatus = document.getElementById('notesSaveStatus');
+    if (notesTA) {
+        let notesSaveTimer;
+        notesTA.addEventListener('input', () => {
+            notesSaveStatus.textContent = 'Unsaved...';
+            notesSaveStatus.style.color = 'var(--warning)';
+            clearTimeout(notesSaveTimer);
+            notesSaveTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch("{% url 'save_notes' report.id %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        },
+                        body: JSON.stringify({ notes: notesTA.value }),
+                    });
+                    if (res.ok) {
+                        notesSaveStatus.textContent = '✓ Saved';
+                        notesSaveStatus.style.color = 'var(--success)';
+                        setTimeout(() => {
+                            notesSaveStatus.textContent = 'Auto-saved';
+                            notesSaveStatus.style.color = 'var(--text-muted)';
+                        }, 2000);
+                    }
+                } catch (e) {
+                    notesSaveStatus.textContent = 'Save failed';
+                    notesSaveStatus.style.color = 'var(--error)';
+                }
+            }, 1000);
+        });
+    }
+</script>
+{% endblock %}

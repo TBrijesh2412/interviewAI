@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Cover Letter — {{ report.title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .letter-page {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 2rem;
+    }
+
+    .letter-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 4rem;
+        box-shadow: var(--shadow-premium);
+        position: relative;
+        min-height: 800px;
+    }
+
+    .letter-header {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+
+    .letter-content {
+        white-space: pre-line;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        color: var(--text-primary);
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .letter-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 3rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    @media print {
+
+        .btn,
+        .nav,
+        .footer,
+        .letter-actions {
+            display: none !important;
+        }
+
+        .letter-card {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+            background: white !important;
+            color: black !important;
+        }
+
+        .letter-content {
+            color: black !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="letter-page">
+    <div class="letter-actions" style="margin-bottom: 2rem; justify-content: flex-start;">
+        <a href="{% url 'report_detail' report.id %}" class="btn btn-secondary"
+            style="padding: 0.6rem 1.2rem; font-size: 0.85rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                style="margin-right: 0.5rem;">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Back to Report
+        </a>
+    </div>
+
+    {% if letter_content %}
+    <div class="letter-card">
+        <div class="letter-header">
+            <h1 style="font-size: 2rem; letter-spacing: -0.02em; margin-bottom: 0.5rem;">{{ letter_title }}</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Tailored for {{ report.target_company|default:"the
+                role" }}</p>
+        </div>
+
+        <div class="letter-content" id="letterBody">
+            {{ letter_content }}
+        </div>
+
+        <div class="letter-actions">
+            <button onclick="window.print()" class="btn btn-primary" style="background: var(--accent-gradient);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="margin-right: 0.5rem;">
+                    <path d="M6 9V2h12v7"></path>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                Print / Save as PDF
+            </button>
+            <button onclick="copyLetter()" class="btn btn-secondary" id="copyBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="margin-right: 0.5rem;">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy to Clipboard
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <div class="card empty-state">
+        <div
+            style="width: 80px; height: 80px; background: rgba(255, 45, 120, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; color: var(--accent-primary);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+        </div>
+        <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Generate Your Cover Letter</h2>
+        <p style="color: var(--text-primary); max-width: 500px; margin: 0 auto 2.5rem; line-height: 1.6;">Our AI will
+            analyze your resume against the job description to craft a high-converting, professional cover letter
+            tailored for {{ report.target_company|default:"this role" }}.</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-lg"
+                style="height: 3.5rem; padding: 0 3rem; background: var(--accent-gradient);">
+                Generate Now
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function copyLetter() {
+        const text = document.getElementById('letterBody').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('copyBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✓ Copied!';
+            btn.style.color = 'var(--success)';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.color = '';
+            }, 2000);
+        });
+    }
+</script>
+{% endblock %}

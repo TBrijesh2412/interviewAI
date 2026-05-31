@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics — Interview AI{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+    .analytics-page {
+        padding: 0;
+    }
+
+    .analytics-hero {
+        background: linear-gradient(135deg, rgba(61, 90, 74, 0.05) 0%, rgba(255, 124, 82, 0.05) 100%);
+        border-bottom: 1px solid var(--border-color);
+        padding: 4rem 0 3rem;
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .analytics-hero h1 {
+        font-size: 2.5rem;
+        letter-spacing: -0.03em;
+    }
+
+    .analytics-hero p {
+        color: var(--brand-green);
+        margin-top: 0.5rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    @media (max-width: 900px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-premium);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        background: var(--accent-gradient);
+        transition: var(--transition);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--border-hover);
+    }
+
+    .stat-card:hover::before {
+        opacity: 0.03;
+    }
+
+    .stat-card>* {
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-value {
+        font-size: 3.5rem;
+        font-weight: 800;
+        letter-spacing: -0.05em;
+        line-height: 1;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-top: 0.75rem;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .chart-card {
+        background: var(--bg-card);
+        
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: var(--shadow-premium);
+    }
+
+    .chart-card h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 2rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 6rem 2rem;
+        background: var(--bg-card);
+        border: 1px dashed var(--border-color);
+        border-radius: 24px;
+    }
+
+    .empty-state h2 {
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+    }
+
+    /* Heatmap Styling */
+    .mastery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .mastery-card {
+        background: var(--bg-panel);
+        
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: var(--transition);
+    }
+
+    .mastery-topic {
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .mastery-box {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 1rem;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.25rem;
+        color: white;
+        box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .mastery-box::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-page">
+    <div class="analytics-hero reveal reveal-up">
+        <p
+            style="color: var(--accent-primary); font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.1em; margin-bottom: 0.75rem;">
+            Intelligence Center</p>
+        <h1>Your Career <span class="gradient-text">Analytics</span></h1>
+        <p>Track your progress and identify patterns across all your interview reports.</p>
+    </div>
+
+    {% if analytics.total_reports == 0 %}
+    <div class="empty-state">
+        <div
+            style="width:64px;height:64px;background:var(--bg-panel);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 2rem;color:var(--text-muted);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+        </div>
+        <h2>No Data Yet</h2>
+        <p>Generate at least one interview report to see your analytics.</p>
+        <a href="{% url 'create_report' %}" class="btn-premium">
+            <div class="btn-left" style="padding: 1rem 2rem; font-size: 1rem;">
+                Create Your First Report
+            </div>
+            <div class="btn-right" style="padding: 1rem 1.2rem;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </div>
+        </a>
+    </div>
+    {% else %}
+
+    <div class="stats-grid stagger-container">
+        <div class="stat-card stagger-item">
+            <div class="stat-value">{{ analytics.total_reports }}</div>
+            <div class="stat-label">Total Reports</div>
+        </div>
+        <div class="stat-card stagger-item">
+            <div class="stat-value">{{ analytics.avg_score }}<span style="font-size:1.5rem;">%</span></div>
+            <div class="stat-label">Average Match Score</div>
+        </div>
+        <div class="stat-card stagger-item">
+            <div class="stat-value">{{ analytics.best_score }}<span style="font-size:1.5rem;">%</span></div>
+            <div class="stat-label">Best Match Score</div>
+        </div>
+    </div>
+
+    <div class="charts-grid stagger-container">
+        <div class="chart-card stagger-item" style="grid-column: 1 / -1;">
+            <h3>Score Progression Over Time</h3>
+            <canvas id="scoreTrendChart" height="80"></canvas>
+        </div>
+
+        <div class="chart-card stagger-item" style="grid-column: 1 / -1;">
+            <h3>Topic Mastery Heatmap</h3>
+            <div class="mastery-grid">
+                {% for item in analytics.mastery_data %}
+                <div class="mastery-card stagger-item">
+                    <div class="mastery-topic">{{ item.topic }}</div>
+                    <div class="mastery-box" style="background: {{ item.color }}">
+                        {{ item.mastery }}
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ item.attempts }} Attempts</div>
+                </div>
+                {% empty %}
+                <p style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 2rem;">
+                    Complete mock interviews to build your mastery heatmap.
+                </p>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if analytics.skill_gap_frequency %}
+        <div class="chart-card stagger-item" style="grid-column: 1 / -1;">
+            <h3>Most Common Skill Gaps</h3>
+            <canvas id="skillGapChart" height="60"></canvas>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    {% if analytics.total_reports > 0 %}
+    const scoreTrend = {{ analytics.score_trend| safe }};
+    const skillGapFreq = {{ analytics.skill_gap_frequency| safe }};
+
+    // Score Trend Chart
+    const trendCtx = document.getElementById('scoreTrendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: scoreTrend.map(d => d.date),
+            datasets: [{
+                label: 'Match Score',
+                data: scoreTrend.map(d => d.score),
+                borderColor: '#3d5a4a',
+                backgroundColor: 'rgba(61, 90, 74, 0.05)',
+                borderWidth: 3,
+                pointBackgroundColor: '#ff7c52',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 9,
+                fill: true,
+                tension: 0.4,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#FFFFFF',
+                    titleColor: '#111111',
+                    bodyColor: '#4A4A4A',
+                    borderColor: 'rgba(0,0,0,0.06)',
+                    borderWidth: 1,
+                    callbacks: {
+                        title: (items) => scoreTrend[items[0].dataIndex].title,
+                        label: (item) => ` Score: ${item.raw}%`,
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(0,0,0,0.03)' }, ticks: { color: '#888888' } },
+                y: {
+                    min: 0, max: 100,
+                    grid: { color: 'rgba(0,0,0,0.03)' },
+                    ticks: { color: '#888888', callback: v => v + '%' }
+                }
+            }
+        }
+    });
+
+    // Skill Gap Chart
+    if (Object.keys(skillGapFreq).length > 0) {
+        const skillCtx = document.getElementById('skillGapChart').getContext('2d');
+        const labels = Object.keys(skillGapFreq);
+        const data = Object.values(skillGapFreq);
+        const colors = labels.map((_, i) => {
+            const palette = ['#3d5a4a', '#ff7c52', '#cca3e1', '#2a4036', '#ff9a7b'];
+            return palette[i % palette.length];
+        });
+        new Chart(skillCtx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Frequency',
+                    data,
+                    backgroundColor: colors,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                    y: {
+                        grid: { color: 'rgba(0,0,0,0.03)' },
+                        ticks: { color: '#888888', stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+</script>
+{% endblock %}

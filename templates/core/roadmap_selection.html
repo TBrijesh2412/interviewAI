@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Setup Your Path | Interview AI{% endblock %}
+
+{% block extra_head %}
+<style>
+    .selection-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .selection-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 3rem;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .selection-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .selection-header h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .selection-header p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+    }
+
+    .form-group {
+        margin-bottom: 2.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-panel);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 1rem;
+        transition: var(--transition);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--brand-green);
+        box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.1);
+    }
+
+    /* Target Level Selection */
+    .level-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .level-option {
+        position: relative;
+    }
+
+    .level-option input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .level-card {
+        padding: 1.25rem;
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: var(--transition);
+        display: block;
+    }
+
+    .level-option input:checked+.level-card {
+        border-color: var(--brand-green);
+        background: rgba(74, 222, 128, 0.05);
+        color: var(--brand-green);
+    }
+
+    .level-card h4 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    /* Focus Chips */
+    .chips-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .chip-option input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .chip-label {
+        padding: 0.6rem 1.25rem;
+        border: 1px solid var(--border-color);
+        border-radius: 50px;
+        background: var(--bg-panel);
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: block;
+    }
+
+    .chip-option input:checked+.chip-label {
+        background: var(--brand-green);
+        color: white;
+        border-color: var(--brand-green);
+        box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+    }
+
+    /* Timeline Selection */
+    .timeline-select {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .timeline-option {
+        flex: 1;
+    }
+
+    .generate-btn {
+        width: 100%;
+        padding: 1.25rem;
+        background: var(--brand-green);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        box-shadow: 0 10px 25px rgba(74, 222, 128, 0.4);
+        transition: var(--transition);
+        margin-top: 1rem;
+    }
+
+    .generate-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(74, 222, 128, 0.5);
+    }
+
+    .generate-btn:active {
+        transform: scale(0.98);
+    }
+
+    @media (max-width: 768px) {
+        .selection-card {
+            padding: 1.5rem;
+        }
+
+        .selection-header h1 {
+            font-size: 1.6rem !important;
+        }
+
+        .level-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .timeline-select {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="selection-container">
+    <div class="selection-card">
+        <header class="selection-header">
+            <h1>Setup Your Path</h1>
+            <p>Tell us where you want to go, and our AI will build the roadmap.</p>
+        </header>
+
+        <form action="{% url 'generate_roadmap_post' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Target Role</label>
+                <input type="text" name="role" class="form-control"
+                    value="{{ profile.target_role|default:'Software Engineer' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Target Level</label>
+                <div class="level-grid">
+                    {% for val, lbl in profile.EXPERIENCE_CHOICES %}
+                    <label class="level-option">
+                        {% if profile.experience_level == val or not profile.experience_level and forloop.first %}
+                        <input type="radio" name="level" value="{{ val }}" checked>
+                        {% else %}
+                        <input type="radio" name="level" value="{{ val }}">
+                        {% endif %}
+                        <span class="level-card">
+                            <h4>{{ lbl }}</h4>
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Focus Areas (Select all that apply)</label>
+                <div class="chips-grid">
+                    {# Select common focus areas #}
+                    <label class="chip-option">
+                        <input type="checkbox" name="focus" value="Frontend Mastery">
+                        <span class="chip-label">Frontend Mastery</span>
+                    </label>
+                    <label class="chip-option">
+                        <input type="checkbox" name="focus" value="Backend Scaling">
+                        <span class="chip-label">Backend Scaling</span>
+                    </label>
+                    <label class="chip-option">
+                        <input type="checkbox" name="focus" value="DS & Algo">
+                        <span class="chip-label">DS & Algo</span>
+                    </label>
+                    <label class="chip-option">
+                        <input type="checkbox" name="focus" value="Cloud Architecture">
+                        <span class="chip-label">Cloud Architecture</span>
+                    </label>
+                    <label class="chip-option">
+                        <input type="checkbox" name="focus" value="Engineering Leadership">
+                        <span class="chip-label">Engineering Leadership</span>
+                    </label>
+                    <label class="chip-option">
+                        <input type="checkbox" name="focus" value="Testing & QA">
+                        <span class="chip-label">Testing & QA</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Timeline Preference</label>
+                <div class="timeline-select">
+                    <label class="level-option timeline-option">
+                        <input type="radio" name="timeline" value="1 Month">
+                        <span class="level-card">
+                            <h4>1 Month</h4>
+                        </span>
+                    </label>
+                    <label class="level-option timeline-option">
+                        <input type="radio" name="timeline" value="3 Months" checked>
+                        <span class="level-card">
+                            <h4>3 Months</h4>
+                        </span>
+                    </label>
+                    <label class="level-option timeline-option">
+                        <input type="radio" name="timeline" value="6 Months">
+                        <span class="level-card">
+                            <h4>6 Months</h4>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-premium"
+                style="width: 100%; border: none; background: transparent; padding: 0; margin-top: 1rem;">
+                <div class="btn-left"
+                    style="flex: 1; justify-content: center; font-size: 1.1rem; padding: 1.25rem 2rem;">
+                    Generate My Custom Roadmap
+                </div>
+                <div class="btn-right" style="padding: 1.25rem 1.5rem;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                </div>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

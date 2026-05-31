@@ -1,0 +1,1702 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Interview AI{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* App Shell */
+            --bg-page: #F2F0EC;
+            --bg-card: #FFFFFF;
+            --bg-panel: #EBEBEB;
+            --bg-input: #FFFFFF;
+            --bg-sidebar: #000000;
+            /* Deep forest green sidebar */
+            --border-color: rgba(0, 0, 0, 0.09);
+            --border-hover: rgba(255, 92, 53, 0.25);
+
+            /* Liquid Glass Variables (MarkAgency Style) */
+            --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02));
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-border-shine: rgba(255, 255, 255, 1.0);
+            --glass-sidebar: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+            --glass-blur: blur(40px);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+
+            /* Text */
+            --text-primary: #111111;
+            --text-secondary: #555555;
+            --text-muted: #999999;
+            --text-sidebar: #c8d8cc;
+            /* Soft white for sidebar text */
+            --text-sidebar-muted: #7a9986;
+
+            /* Brand */
+            --brand-green: #3d6b52;
+            --brand-green-light: #4ade80;
+            --brand-orange: #ff7c52;
+            --brand-purple: #c97fea;
+
+            --accent-primary: var(--brand-green);
+            --accent-secondary: var(--brand-orange);
+            --accent-gradient: linear-gradient(135deg, var(--brand-green) 0%, #2a4036 100%);
+
+            --success: #16a34a;
+            --warning: #d97706;
+            --error: #dc2626;
+
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --shadow-premium: 0 15px 40px rgba(0, 0, 0, 0.08);
+
+            --font-stack: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            
+        }
+
+        :root[data-theme="dark"] {
+            --bg-page: #000000;
+            --bg-card: #161616;
+            --bg-panel: #1e1e1e;
+            --bg-input: #252525;
+            --bg-sidebar: #000000;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(74, 222, 128, 0.25);
+
+            /* Liquid Glass Variables (MarkAgency Style) */
+            --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01));
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-border-shine: rgba(255, 255, 255, 0.4);
+            --glass-sidebar: linear-gradient(180deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.1));
+            --glass-blur: blur(60px);
+            --glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6);
+
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --text-sidebar: #b8ccbe;
+            --text-sidebar-muted: #5a7a66;
+
+            --brand-green: #4ade80;
+            --brand-green-light: #86efac;
+            --brand-orange: #fb923c;
+            --brand-purple: #d8b4fe;
+
+            --accent-primary: var(--brand-green);
+            --accent-secondary: var(--brand-orange);
+            --accent-gradient: linear-gradient(135deg, #4ade80 0%, #206b3f 100%);
+
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+            --shadow-premium: 0 15px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes subtleBgPan {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Reveal Animations Framework */
+        .reveal {
+            opacity: 0;
+            will-change: opacity, transform;
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translate(0, 0) scale(1) !important;
+        }
+        .reveal-up { transform: translateY(40px); }
+        .reveal-scale { transform: scale(0.95); }
+        .reveal-left { transform: translateX(40px); }
+        .reveal-right { transform: translateX(-40px); }
+        
+        /* Staggered Children Framework */
+        .stagger-container.active .stagger-item {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .stagger-item {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .stagger-item:nth-child(1) { transition-delay: 0.1s; }
+        .stagger-item:nth-child(2) { transition-delay: 0.2s; }
+        .stagger-item:nth-child(3) { transition-delay: 0.3s; }
+        .stagger-item:nth-child(4) { transition-delay: 0.4s; }
+        .stagger-item:nth-child(5) { transition-delay: 0.5s; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            font-family: var(--font-stack);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: row;
+            /* Side-by-side sidebar + content */
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(74, 222, 128, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(251, 146, 60, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+            background-size: 200% 200%;
+            animation: subtleBgPan 25s ease-in-out infinite alternate;
+            background-attachment: fixed;
+        }
+
+        /* Crisp Geometric Background for Glassmorphism Contrast */
+        .ambient-background {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .geom-shape {
+            position: absolute;
+            will-change: transform;
+            opacity: 1.0;
+        }
+        html[data-theme="dark"] .geom-shape {
+            opacity: 0.85;
+        }
+
+        /* Rings */
+        .geom-ring {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            animation: rotateFloat 30s linear infinite;
+        }
+        .ring-1 {
+            width: 800px; height: 800px;
+            border-color: rgba(74, 222, 128, 0.3);
+            border-style: dashed;
+            top: -200px; left: -200px;
+            animation-duration: 60s;
+        }
+        .ring-2 {
+            width: 600px; height: 600px;
+            border-color: rgba(251, 146, 60, 0.3);
+            bottom: -100px; right: -100px;
+            animation: rotateFloatRev 45s linear infinite;
+        }
+
+        /* Squares */
+        .geom-square {
+            width: 80px; height: 80px;
+            border-radius: 16px;
+            animation: tumble 20s linear infinite;
+        }
+        .box-1 {
+            background: linear-gradient(135deg, var(--brand-purple), transparent);
+            border: 1px solid var(--brand-purple);
+            top: 25%; left: 10%;
+            animation-duration: 25s;
+        }
+        .box-2 {
+            background: linear-gradient(135deg, #3b82f6, transparent);
+            border: 1px solid #3b82f6;
+            top: 65%; right: 15%;
+            animation-duration: 18s; animation-direction: reverse;
+        }
+
+        /* Triangles */
+        .geom-triangle {
+            width: 0; height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 70px solid var(--brand-orange);
+            animation: tumble 22s linear infinite;
+        }
+        .tri-1 {
+            top: 20%; right: 20%;
+            border-bottom-color: rgba(251, 146, 60, 0.7);
+        }
+        .tri-2 {
+            bottom: 30%; left: 25%;
+            border-bottom-color: rgba(74, 222, 128, 0.7);
+            transform: scale(0.6);
+            animation-duration: 15s;
+            animation-direction: reverse;
+        }
+
+        @keyframes rotateFloat {
+            0% { transform: rotate(0deg) translate(0, 0); }
+            50% { transform: rotate(180deg) translate(50px, 50px); }
+            100% { transform: rotate(360deg) translate(0, 0); }
+        }
+        @keyframes rotateFloatRev {
+            0% { transform: rotate(360deg) translate(0, 0); }
+            50% { transform: rotate(180deg) translate(-50px, -50px); }
+            100% { transform: rotate(0deg) translate(0, 0); }
+        }
+        @keyframes tumble {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-120px) rotate(180deg); }
+            100% { transform: translateY(0) rotate(360deg); }
+        }
+
+        /* App Shell: sidebar + content */
+        .app-shell {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(17, 20, 24, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+        }
+
+        .gradient-text {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        /* =============================
+           LEFT SIDEBAR NAV
+           ============================= */
+        .sidebar {
+            width: 240px;
+            min-width: 240px;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            background: var(--bg-sidebar);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Logo */
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.5rem 1.25rem 1.25rem;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-mark {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            background: linear-gradient(135deg, #4ade80 0%, #206b3f 100%);
+            border-left: 3px solid var(--brand-orange);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 14px rgba(74, 222, 128, 0.2);
+        }
+
+        .logo-text {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+        }
+
+        /* Nav Sections */
+        .sidebar-section {
+            padding: 0 0.75rem 0.5rem;
+        }
+
+        .sidebar-section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(200, 216, 204, 0.5);
+            padding: 0.85rem 0.5rem 0.35rem;
+        }
+
+        /* Nav Items */
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: rgba(200, 216, 204, 0.75);
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+            margin-bottom: 2px;
+            position: relative;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: #ffffff;
+        }
+
+        .sidebar-link.active {
+            background: rgba(74, 222, 128, 0.12);
+            color: #6ee7a0;
+            border-left: 3px solid #4ade80;
+            padding-left: calc(0.75rem - 3px);
+        }
+
+        .sidebar-link svg {
+            opacity: 0.6;
+            flex-shrink: 0;
+        }
+
+        .sidebar-link.active svg {
+            opacity: 1;
+            color: #4ade80;
+        }
+
+        .sidebar-link:hover svg {
+            opacity: 1;
+        }
+
+        /* Bottom section of sidebar */
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            background: none;
+            border: none;
+            color: rgba(200, 216, 204, 0.75);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.6rem 0.75rem;
+            border-radius: 8px;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: #ffffff;
+        }
+
+        html[data-theme="dark"] .moon-icon {
+            display: none;
+        }
+
+        html[data-theme="light"] .sun-icon {
+            display: none;
+        }
+
+        .logo {
+            text-decoration: none;
+        }
+
+        /* =============================
+           RESPONSIVE: mobile hamburger
+           ============================= */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .mobile-topbar {
+            display: none;
+            height: 56px;
+            align-items: center;
+            padding: 0 1.25rem;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-card);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .hamburger {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-primary);
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -240px;
+                top: 0;
+                bottom: 0;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .mobile-topbar {
+                display: flex;
+            }
+        }
+
+        /* Button System */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            font-family: inherit;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--brand-green);
+            color: white;
+            border: none;
+            clip-path: polygon(0% 0%, 100% 0%, 96% 100%, 0% 100%);
+            border-radius: 4px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: #111111;
+        }
+
+        .gradient-text {
+            background: linear-gradient(45deg, var(--brand-orange), var(--brand-orange), var(--brand-green));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 1000;
+        }
+
+        .btn-secondary {
+            background: rgba(61, 90, 74, 0.08);
+            /* Subtle brand green */
+            color: var(--brand-green) !important;
+            border: 1px solid rgba(61, 90, 74, 0.2);
+            border-radius: 4px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(61, 90, 74, 0.15);
+            border-color: rgba(61, 90, 74, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Premium Slanted Split Button */
+        .btn-premium {
+            display: inline-flex;
+            align-items: stretch;
+            gap: 4px;
+            background: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .btn-premium .btn-left {
+            background: var(--brand-green);
+            color: white;
+            padding: 0.85rem 1.8rem;
+            border-radius: 12px 4px 4px 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            clip-path: polygon(0% -1%, 101% -1%, calc(100% - 16px) 101%, 0% 101%);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            border: 1px solid transparent;
+        }
+
+        @media (max-width: 600px) {
+            .btn-premium .btn-left {
+                padding: 0.7rem 1.25rem;
+                font-size: 0.85rem;
+                clip-path: polygon(0% -1%, 101% -1%, calc(100% - 12px) 101%, 0% 101%);
+            }
+        }
+
+        .btn-premium .btn-right {
+            background: var(--brand-green);
+            color: white;
+            padding: 0.85rem 1.2rem;
+            border-radius: 4px 12px 12px 4px;
+            display: flex;
+            align-items: center;
+            border: 1px solid transparent;
+            justify-content: center;
+            clip-path: polygon(16px -1%, 101% -1%, 101% 101%, 0% 101%);
+            transition: var(--transition);
+        }
+
+        @media (max-width: 600px) {
+            .btn-premium .btn-right {
+                padding: 0.7rem 0.8rem;
+                clip-path: polygon(12px -1%, 101% -1%, 101% 101%, 0% 101%);
+            }
+        }
+
+        /* Support secondary color themes (Bordered by default) */
+        .btn-premium.btn-secondary .btn-left,
+        .btn-premium.btn-secondary .btn-right {
+            background: rgba(61, 90, 74, 0.05);
+            /* Very subtle bg */
+            color: var(--brand-green);
+            border: 1px solid var(--brand-green);
+        }
+
+        html[data-theme="dark"] .btn-premium.btn-secondary .btn-left,
+        html[data-theme="dark"] .btn-premium.btn-secondary .btn-right {
+            background: rgba(74, 222, 128, 0.05);
+            color: var(--brand-green);
+            border-color: var(--brand-green);
+        }
+
+        /* Interactive Hover Effects Logic */
+
+        /* 1. Primary (Filled) -> Bordered on Hover */
+        .btn-premium:not(.btn-secondary):hover .btn-left,
+        .btn-premium:not(.btn-secondary):hover .btn-right {
+            background: transparent !important;
+            color: var(--brand-green) !important;
+            border-color: var(--brand-green) !important;
+        }
+
+        /* 2. Secondary (Bordered) -> Filled on Hover */
+        .btn-premium.btn-secondary:hover .btn-left,
+        .btn-premium.btn-secondary:hover .btn-right {
+            background: var(--brand-green) !important;
+            color: white !important;
+            border-color: var(--brand-green) !important;
+        }
+
+        /* Dark Mode Overrides for Hovers */
+        html[data-theme="dark"] .btn-premium:not(.btn-secondary):hover .btn-left,
+        html[data-theme="dark"] .btn-premium:not(.btn-secondary):hover .btn-right {
+            background: transparent !important;
+            color: var(--brand-green-light) !important;
+            border-color: var(--brand-green-light) !important;
+        }
+
+        html[data-theme="dark"] .btn-premium.btn-secondary:hover .btn-left,
+        html[data-theme="dark"] .btn-premium.btn-secondary:hover .btn-right {
+            background: var(--brand-green) !important;
+            color: black !important;
+            /* Premium contrast in dark mode */
+            border-color: var(--brand-green) !important;
+        }
+
+        .btn-premium:active {
+            transform: scale(0.96);
+        }
+
+        /* Layout & Containers */
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2.5rem 2.5rem;
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem 1rem;
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Footer Styles */
+        .main-footer {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 5% 4rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1500px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .footer-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .footer-copy {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-primary);
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+
+            .footer-links {
+                justify-content: center;
+                gap: 1.5rem;
+            }
+        }
+
+        /* Animated Hover Glow for Buttons & Premium Elements */
+        .hover-glow {
+            position: relative;
+            z-index: 1;
+        }
+        .hover-glow::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(90deg, var(--brand-green), var(--brand-orange), var(--brand-purple), var(--brand-green));
+            background-size: 300% 300%;
+            border-radius: 12px;
+            z-index: -1;
+            filter: blur(12px);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            animation: moveGradient 4s linear infinite;
+        }
+        .hover-glow:hover::before {
+            opacity: 0.65;
+        }
+        @keyframes moveGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-border-shine);
+            border-left: 1px solid var(--glass-border-shine);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--glass-shadow);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-left: 0.25rem;
+        }
+
+        input,
+        textarea,
+        select {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.875rem 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: var(--bg-card);
+            box-shadow: 0 0 0 4px rgba(255, 45, 120, 0.1);
+        }
+
+        /* Badges */
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 8px;
+            letter-spacing: 0.025em;
+        }
+
+        .badge-accent {
+            background: rgba(255, 45, 120, 0.1);
+            color: var(--accent-primary);
+            border: 1px solid rgba(255, 45, 120, 0.2);
+        }
+
+        /* Utility */
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+    </style>
+    <!-- Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+
+    <link rel="stylesheet" href="{% static 'core/css/animations.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <!-- Crisp Geometric Background Shapes for Liquid Glass Effect -->
+    <div class="ambient-background">
+        <div class="geom-shape geom-ring ring-1"></div>
+        <div class="geom-shape geom-ring ring-2"></div>
+        <div class="geom-shape geom-square box-1"></div>
+        <div class="geom-shape geom-square box-2"></div>
+        <div class="geom-shape geom-triangle tri-1"></div>
+        <div class="geom-shape geom-triangle tri-2"></div>
+    </div>
+
+    <!-- ===================== ULTRA-PREMIUM NEURAL LOADER ===================== -->
+    <script>
+        // Immediate theme detection to prevent flash
+        (function () {
+            const savedTheme = localStorage.getItem('interviewai-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            if (theme === 'dark') {
+                document.write('<style>#pageLoader { background: #000000 !important; color: #ffffff !important; }</style>');
+            } else {
+                document.write('<style>#pageLoader { background: #F2F0EC !important; color: #1a1a1a !important; }</style>');
+            }
+        })();
+    </script>
+    <div id="pageLoader" style="
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-page, #0d0d0d);
+        transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
+    ">
+        <!-- Neural Pulse Core -->
+        <div class="neural-container" style="
+            position: relative;
+            width: 280px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        ">
+            <!-- Global Glow -->
+            <div style="
+                position: absolute;
+                width: 200px; height: 200px;
+                background: radial-gradient(circle, rgba(74, 222, 128, 0.15), transparent 70%);
+                filter: blur(40px);
+                animation: globalPulse 4s ease-in-out infinite;
+            "></div>
+
+            <!-- 3D Rotating Rings -->
+            <svg viewBox="0 0 200 200"
+                style="position: absolute; width: 100%; height: 100%; animation: neuralRotate1 15s linear infinite;">
+                <circle cx="100" cy="100" r="90" fill="none" stroke="url(#ringGradient1)" stroke-width="0.5"
+                    stroke-dasharray="10 20" opacity="0.4" />
+                <defs>
+                    <linearGradient id="ringGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#4ade80" />
+                        <stop offset="100%" stop-color="#22c55e" />
+                    </linearGradient>
+                </defs>
+            </svg>
+
+            <svg viewBox="0 0 200 200"
+                style="position: absolute; width: 85%; height: 85%; animation: neuralRotate2 10s linear infinite reverse;">
+                <circle cx="100" cy="100" r="80" fill="none" stroke="url(#ringGradient2)" stroke-width="1.5"
+                    stroke-dasharray="60 120" stroke-linecap="round" opacity="0.6" />
+                <defs>
+                    <linearGradient id="ringGradient2" x1="100%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#4ade80" />
+                        <stop offset="100%" stop-color="#166534" />
+                    </linearGradient>
+                </defs>
+            </svg>
+
+            <svg viewBox="0 0 200 200"
+                style="position: absolute; width: 65%; height: 65%; animation: neuralRotate1 6s linear infinite;">
+                <circle cx="100" cy="100" r="70" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-dasharray="2 15"
+                    stroke-linecap="round" />
+            </svg>
+
+            <!-- Inner Power Core -->
+            <div class="neural-core" style="
+                width: 60px; height: 60px;
+                border-radius: 50%;
+                background: radial-gradient(circle at 30% 30%, #4ade80, #166534);
+                box-shadow: 0 0 30px rgba(74, 222, 128, 0.5), inset 0 0 15px rgba(255,255,255,0.3);
+                display: flex; align-items: center; justify-content: center;
+                z-index: 5;
+                animation: corePulse 2s ease-in-out infinite;
+                border: 1px solid rgba(255,255,255,0.2);
+            ">
+                <span
+                    style="font-size: 1.5rem; font-weight: 900; color: white; text-shadow: 0 0 10px rgba(255,255,255,0.5);">I</span>
+            </div>
+        </div>
+
+        <!-- Progress Text -->
+        <div style="margin-top: -2rem; text-align: center; z-index: 10;">
+            <p id="loaderText" style="
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-size: 1.1rem; font-weight: 800;
+                color: var(--text-primary);
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                margin: 0;
+                opacity: 0.8;
+                animation: textShimmer 3s ease-in-out infinite;
+            ">Initializing Intelligence</p>
+            <div style="
+                width: 120px;
+                height: 2px;
+                background: rgba(74, 222, 128, 0.1);
+                margin: 1rem auto;
+                position: relative;
+                border-radius: 2px;
+                overflow: hidden;
+            ">
+                <div class="loader-bar-fill"></div>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em;">INTERVIEW
+                AI • V2.0</p>
+        </div>
+    </div>
+
+    <style>
+        @keyframes neuralRotate1 {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes neuralRotate2 {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes corePulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 30px rgba(74, 222, 128, 0.5);
+            }
+
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 60px rgba(74, 222, 128, 0.8);
+            }
+        }
+
+        @keyframes globalPulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes textShimmer {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                color: var(--text-primary);
+            }
+
+            50% {
+                opacity: 1;
+                color: #4ade80;
+            }
+        }
+
+        .loader-bar-fill {
+            position: absolute;
+            height: 100%;
+            width: 40%;
+            background: #4ade80;
+            left: -40%;
+            animation: barMove 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            box-shadow: 0 0 10px #4ade80;
+        }
+
+        @keyframes barMove {
+            from {
+                left: -40%;
+            }
+
+            to {
+                left: 100%;
+            }
+        }
+
+        #pageLoader.loader-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+    </style>
+
+    <script>
+        // Hide loader once page is fully loaded
+        window.addEventListener('load', function () {
+            var loader = document.getElementById('pageLoader');
+            if (loader) loader.classList.add('loader-hidden');
+        });
+
+        // Re-show loader on form submit (report generation / any POST)
+        document.addEventListener('submit', function (e) {
+            var loader = document.getElementById('pageLoader');
+            var loaderText = document.getElementById('loaderText');
+            if (loader) {
+                if (loaderText) loaderText.textContent = 'AI is generating your report…';
+                loader.classList.remove('loader-hidden');
+            }
+        });
+
+    </script>
+
+    <!-- Background Decoration Particles -->
+    <div id="particle-container" style="position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.4;"></div>
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Logo -->
+        <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'landing' %}{% endif %}"
+            class="sidebar-logo">
+            <div class="logo-mark">I</div>
+            <span class="logo-text">Interview <span class="gradient-text">AI</span></span>
+        </a>
+
+        {% block sidebar_nav %}
+        {% if user.is_authenticated %}
+        <!-- Platform Section -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Platform</div>
+
+            <a href="{% url 'dashboard' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                </svg>
+                Dashboard
+            </a>
+
+            <a href="{% url 'analytics' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Analytics
+            </a>
+
+            <a href="{% url 'whiteboard' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'whiteboard' %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                </svg>
+                Coding Whiteboard
+            </a>
+
+
+            <a href="{% url 'mega_interview_setup' %}"
+                class="sidebar-link {% if 'mega-interview' in request.path %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+                Mega Interview
+            </a>
+
+            <a href="{% url 'star_coach' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'star_coach' %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                STAR Coach
+            </a>
+
+            <a href="{% url 'job_matcher' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'job_matcher' %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                Job Matcher
+            </a>
+
+            <a href="{% url 'learning:learning_home' %}"
+                class="sidebar-link {% if 'learn' in request.path %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                Learn
+            </a>
+
+            <a href="{% url 'roadmap' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'roadmap' %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M13 2L3 14h9l-1 8L21 10h-9l1-8z" />
+                </svg>
+                Career Roadmap
+            </a>
+
+            <a href="{% url 'create_report' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'create_report' %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="12" y1="18" x2="12" y2="12" />
+                    <line x1="9" y1="15" x2="15" y2="15" />
+                </svg>
+                New Report
+            </a>
+        </div>
+
+        <!-- Settings Section -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Settings</div>
+
+            <a href="{% url 'profile' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                Profile
+            </a>
+        </div>
+        {% else %}
+        <!-- Guest Nav -->
+        <div class="sidebar-section" style="margin-top: 1rem;">
+            <a href="{% url 'login' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                Login
+            </a>
+            <a href="{% url 'register' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'register' %}active{% endif %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <line x1="19" y1="8" x2="19" y2="14" />
+                    <line x1="22" y1="11" x2="16" y2="11" />
+                </svg>
+                Register
+            </a>
+        </div>
+        {% endif %}
+        {% endblock %}
+
+        <!-- Bottom: theme + logout -->
+        <div class="sidebar-bottom">
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
+                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <span id="themeLabel">Light Mode</span>
+            </button>
+
+            {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="sidebar-link" style="color: rgba(200,216,204,0.6);">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Logout
+            </a>
+
+            <div style="display:flex; align-items:center; gap:0.6rem; padding: 0.6rem 0.75rem; margin-top: 4px;">
+                <div
+                    style="width:30px; height:30px; min-width:30px; border-radius:50%; background:linear-gradient(135deg, #4ade80 0%, #206b3f 100%); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:0.8rem; box-shadow:0 2px 8px rgba(74,222,128,0.3);">
+                    {{ user.username|first|upper }}</div>
+                <div>
+                    <div style="font-size:0.8rem; font-weight:700; color:#e8e8e8;">{{ user.username }}</div>
+                    <div style="font-size:0.7rem; color:rgba(200,216,204,0.5);">Free Plan</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </aside>
+
+    <!-- Mobile overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===================== MAIN CONTENT ===================== -->
+    <div class="main-content">
+        <!-- Mobile top bar -->
+        <header class="mobile-topbar">
+            <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+            </button>
+            <span class="logo-text">Interview <span class="gradient-text">AI</span></span>
+        </header>
+
+        <main class="container animate-in">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <p class="footer-copy">© 2024 Interview AI — Empowering careers with Intelligence.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Support</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    </div> <!-- end app-shell -->
+
+    <!-- Global Layout Scripts (Dark Mode, etc) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const htmlTag = document.documentElement;
+            const themeToggleBtn = document.getElementById('themeToggle');
+
+            // 1. Check local storage
+            const savedTheme = localStorage.getItem('interviewai-theme');
+
+            // 2. Check system preference
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            // 3. Set Initial Theme
+            if (savedTheme) {
+                htmlTag.setAttribute('data-theme', savedTheme);
+            } else if (prefersDark) {
+                htmlTag.setAttribute('data-theme', 'dark');
+            } else {
+                htmlTag.setAttribute('data-theme', 'light');
+            }
+
+            // 4. Listen for Toggle Clicks
+            const themeLabel = document.getElementById('themeLabel');
+            function updateThemeLabel(theme) {
+                if (themeLabel) themeLabel.textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
+            }
+            updateThemeLabel(savedTheme || (prefersDark ? 'dark' : 'light'));
+
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', () => {
+                    const currentTheme = htmlTag.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    htmlTag.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('interviewai-theme', newTheme);
+                    updateThemeLabel(newTheme);
+                });
+            }
+
+            // 5b. Mobile hamburger
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (hamburgerBtn && sidebar && overlay) {
+                hamburgerBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                    overlay.classList.toggle('open');
+                });
+                overlay.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('open');
+                });
+            }
+
+            // 5. Auto-Convert Standard Buttons to Premium Split Style
+            const buttons = document.querySelectorAll('.btn-primary, .btn-secondary');
+            buttons.forEach(btn => {
+                // Skip if it is already manually structured as a premium button
+                if (btn.classList.contains('premium-applied') || btn.classList.contains('btn-premium')) return;
+
+                // Do not apply to standard navigation text links inside .footer-links or main nav not using the btn class. (We only selected .btn-primary, .btn-secondary so this is safe).
+                const content = btn.innerHTML;
+
+                // Strip outer wrapper styling
+                btn.innerHTML = '';
+                btn.style.padding = '0';
+                btn.style.background = 'transparent';
+                btn.style.border = 'none';
+                btn.style.boxShadow = 'none';
+                btn.style.clipPath = 'none';
+
+                // Build new premium structure
+                const leftSpan = document.createElement('span');
+                leftSpan.className = 'btn-left';
+                leftSpan.innerHTML = content;
+
+                const rightSpan = document.createElement('span');
+                rightSpan.className = 'btn-right';
+                rightSpan.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
+
+                btn.appendChild(leftSpan);
+                btn.appendChild(rightSpan);
+
+                // Enable premium styles globally
+                btn.classList.add('btn-premium');
+                btn.classList.add('premium-applied');
+            });
+
+            // ==========================================
+            // PREMIUM ANIMATION ENGINE
+            // ==========================================
+            gsap.registerPlugin(ScrollTrigger);
+
+            const AnimationEngine = {
+                init() {
+                    this.setupScrollReveals();
+                    this.setup3DTilt();
+                    this.setupStaggeredEntries();
+                },
+
+                setupScrollReveals() {
+                    const reveals = document.querySelectorAll('.reveal');
+                    reveals.forEach(el => {
+                        gsap.to(el, {
+                            scrollTrigger: {
+                                trigger: el,
+                                start: "top 95%",
+                                onEnter: () => el.classList.add('active'),
+                                once: true
+                            }
+                        });
+                    });
+                },
+
+                setup3DTilt() {
+                    if (window.innerWidth > 1024) {
+                        VanillaTilt.init(document.querySelectorAll(".card, .hover-3d"), {
+                            max: 8,
+                            speed: 400,
+                            glare: true,
+                            "max-glare": 0.2,
+                            perspective: 1000,
+                            scale: 1.02
+                        });
+                    }
+                },
+
+                setupStaggeredEntries() {
+                    const containers = document.querySelectorAll('.stagger-container');
+                    containers.forEach(container => {
+                        const items = container.querySelectorAll('.stagger-item');
+                        gsap.to(items, {
+                            opacity: 1,
+                            y: 0,
+                            duration: 0.8,
+                            stagger: 0.1,
+                            ease: "power3.out",
+                            scrollTrigger: {
+                                trigger: container,
+                                start: "top 80%"
+                            }
+                        });
+                    });
+                },
+
+                setupPageTransitions() {
+                    const content = document.getElementById('main-content');
+                    if (!content) return;
+
+                    // Entrance: Content slides UP and FADES IN at high speed
+                    gsap.fromTo(content,
+                        { translateY: "20px", opacity: 0 },
+                        {
+                            translateY: "0px",
+                            opacity: 1,
+                            duration: 0.3,
+                            ease: "power2.out",
+                            onStart: () => {
+                                // Immediate reveal for all children
+                                document.querySelectorAll('.reveal').forEach(el => {
+                                    el.classList.add('active');
+                                });
+                            },
+                            onComplete: () => ScrollTrigger.refresh()
+                        }
+                    );
+
+                    // Hook into all links for exit animation
+                    document.querySelectorAll('a').forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (link.hostname === window.location.hostname &&
+                            !link.hash &&
+                            link.target !== '_blank' &&
+                            href && !href.startsWith('javascript:') && !href.startsWith('#')) {
+
+                            link.addEventListener('click', (e) => {
+                                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                                e.preventDefault();
+                                const target = link.href;
+
+                                // Exit: Content slides UP and FADES OUT
+                                gsap.to(content, {
+                                    translateY: "-20px",
+                                    opacity: 0,
+                                    duration: 0.2,
+                                    ease: "power2.in",
+                                    onComplete: () => window.location.href = target
+                                });
+                            });
+                        }
+                    });
+                },
+
+                setupParticles() {
+                    const container = document.getElementById('particle-container');
+                    if (!container) return;
+
+                    for (let i = 0; i < 15; i++) {
+                        const particle = document.createElement('div');
+                        particle.style.cssText = `
+                            position: absolute;
+                            width: ${Math.random() * 300 + 50}px;
+                            height: ${Math.random() * 300 + 50}px;
+                            background: radial-gradient(circle, rgba(74, 222, 128, 0.05) 0%, transparent 70%);
+                            border-radius: 50%;
+                            left: ${Math.random() * 100}%;
+                            top: ${Math.random() * 100}%;
+                            pointer-events: none;
+                        `;
+                        container.appendChild(particle);
+
+                        gsap.to(particle, {
+                            x: "random(-100, 100)",
+                            y: "random(-100, 100)",
+                            duration: "random(10, 20)",
+                            repeat: -1,
+                            yoyo: true,
+                            ease: "sine.inOut"
+                        });
+                    }
+                }
+            };
+
+            AnimationEngine.init();
+            AnimationEngine.setupPageTransitions();
+            AnimationEngine.setupParticles();
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+
+    <!-- ==========================================
+         GLOBAL SERVER RELOAD DETECTOR
+         Shows a banner when Django dev server restarts
+         ========================================== -->
+    <div id="reloadBanner" style="
+        display: none;
+        position: fixed;
+        top: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 99999;
+        background: linear-gradient(135deg, #1a1a1a, #111);
+        border: 1px solid rgba(74, 222, 128, 0.4);
+        color: white;
+        padding: 0.85rem 1.5rem;
+        border-radius: 50px;
+        display: none;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(74,222,128,0.1);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+        animation: slideDown 0.4s ease-out;
+        white-space: nowrap;
+    ">
+        <span
+            style="width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px rgba(74,222,128,0.8); display: inline-block; animation: pulse 1.5s ease-in-out infinite;"></span>
+        Server updated — reload to apply changes
+        <button onclick="window.location.reload()" style="
+            background: #4ade80;
+            color: #000;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            font-family: inherit;
+        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            Reload Now
+        </button>
+        <button onclick="document.getElementById('reloadBanner').style.display='none'" style="
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            font-size: 1.1rem;
+            line-height: 1;
+            padding: 0 0.25rem;
+        ">✕</button>
+    </div>
+
+    <style>
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        #reloadBanner.show {
+            display: flex !important;
+        }
+    </style>
+
+    <script>
+        (function () {
+            let serverWasDown = false;
+            const banner = document.getElementById('reloadBanner');
+            // Use dedicated /ping/ endpoint — returns instantly, no ML/DB involved.
+            // This prevents false-positives during slow AI report generation.
+            const PING_URL = '/ping/';
+
+            async function checkServer() {
+                try {
+                    const res = await fetch(PING_URL, {
+                        method: 'GET',
+                        cache: 'no-store',
+                        signal: AbortSignal.timeout(3000)
+                    });
+                    if (res.ok) {
+                        if (serverWasDown) {
+                            // Server came back online after a restart
+                            banner.classList.add('show');
+                            serverWasDown = false;
+                        }
+                    }
+                } catch (e) {
+                    // Only treat hard network failures (TypeError = connection refused)
+                    // as "server down". Ignore AbortError (timeouts) to avoid
+                    // false positives when the server is busy with AI processing.
+                    if (e.name === 'TypeError') {
+                        serverWasDown = true;
+                        banner.classList.remove('show');
+                    }
+                }
+            }
+
+            // Poll every 4 seconds (gentle on the server)
+            setInterval(checkServer, 4000);
+        })();
+    </script>
+    <!-- Scroll Observer Initialization (Triggers .reveal classes) -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.15
+            };
+            
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        // Option: Add staggered observation logic if target is a stagger-container
+                        if (entry.target.classList.contains('stagger-container')) {
+                            const items = entry.target.querySelectorAll('.stagger-item');
+                            items.forEach((item, index) => {
+                                setTimeout(() => item.classList.add('active'), index * 100);
+                            });
+                        }
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.reveal, .stagger-container').forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+
+</html>

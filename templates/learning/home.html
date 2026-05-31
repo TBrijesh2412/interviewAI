@@ -1,0 +1,43 @@
+{% extends 'learning/base.html' %}
+{% load static %}
+
+{% block title %}Learn - Interview AI{% endblock %}
+
+{% block learning_content %}
+<div class="learning-home-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+    {% for subject in subjects %}
+    <a href="{% url 'learning:subject_detail' subject.slug %}" class="card" style="text-decoration: none; color: inherit; display: flex; align-items: flex-start; gap: 1rem; padding: 1.5rem; transition: transform 0.2s, box-shadow 0.2s;">
+        {% if subject.icon %}
+        <img src="{{ subject.icon.url }}" alt="{{ subject.name }}" style="width: 48px; height: 48px; border-radius: 8px; object-fit: contain; background: var(--bg-panel); padding: 5px;">
+        {% else %}
+        <div style="width: 48px; height: 48px; border-radius: 8px; background: var(--brand-green); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
+            {{ subject.name|make_list|first|upper }}
+        </div>
+        {% endif %}
+        
+        <div>
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">{{ subject.name }}</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; margin: 0;">
+                {{ subject.description|truncatewords:15 }}
+            </p>
+            <div style="margin-top: 1rem; color: var(--brand-green); font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                Start Learning 
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </div>
+        </div>
+    </a>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border-color);">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--text-muted); margin-bottom: 1rem;">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <h3 style="margin-bottom: 0.5rem; color: var(--text-primary);">No Subjects Found</h3>
+        <p style="color: var(--text-secondary);">Learning content will appear here once added from the admin dashboard.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

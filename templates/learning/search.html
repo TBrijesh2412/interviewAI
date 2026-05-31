@@ -1,0 +1,39 @@
+{% extends 'learning/base.html' %}
+
+{% block title %}Search Results - Learn{% endblock %}
+
+{% block learning_content %}
+<div class="learning-container" style="flex-direction: column;">
+    <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 2rem;">
+        Search Results for "{{ query }}"
+    </h2>
+
+    {% if results %}
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%; max-width: 800px;">
+        {% for article in results %}
+            <a href="{% url 'learning:article_detail' article.topic.subject.slug article.topic.slug article.slug %}" class="card" style="text-decoration: none; color: inherit; padding: 1.5rem; transition: transform 0.2s;">
+                <div style="font-size: 0.85rem; color: var(--brand-green); font-weight: 700; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                    {{ article.topic.subject.name }} &bull; {{ article.topic.title }}
+                </div>
+                <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text-primary);">
+                    {{ article.title }}
+                </h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0; line-height: 1.5;">
+                    {{ article.content|striptags|truncatewords:40 }}
+                </p>
+            </a>
+        {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 4rem; background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border-color); max-width: 800px; width: 100%;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--text-muted); margin-bottom: 1rem;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <h3 style="margin-bottom: 0.5rem; color: var(--text-primary);">No Results Found</h3>
+            <p style="color: var(--text-secondary);">We couldn't find any articles matching "{{ query }}".</p>
+            <a href="{% url 'learning:learning_home' %}" class="btn btn-primary" style="margin-top: 1.5rem;">Browse All Subjects</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

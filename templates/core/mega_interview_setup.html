@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Mega Interview Setup{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin-top: 3rem;">
+    <div class="card" style="padding: 3rem;">
+        <h2 style="margin-bottom: 0.5rem; font-size: 2rem;">Host a <span class="gradient-text">Mega Interview</span></h2>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            Upload your latest resume and select your experience level. Our AI will instantly craft a comprehensive interview including HR, Technical, and Coding rounds all in one session.
+        </p>
+
+        {% if error %}
+            <div style="background-color: rgba(220, 38, 38, 0.1); color: var(--error); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form id="setupForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group mb-4">
+                <label for="experience_level">Select Experience Level</label>
+                <select name="experience_level" id="experience_level" required style="width: 100%; padding: 1rem; border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 1rem; margin-top: 0.5rem;">
+                    <option value="" disabled selected>Choose your level...</option>
+                    <option value="Fresher (0-1 years)">Fresher (0-1 years)</option>
+                    <option value="Junior (1-3 years)">Junior (1-3 years)</option>
+                    <option value="Mid-Level (3-5 years)">Mid-Level (3-5 years)</option>
+                    <option value="Senior (5+ years)">Senior (5+ years)</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-4">
+                <label for="resume">Upload Resume (PDF or Text)</label>
+                <div style="border: 2px dashed var(--border-color); padding: 2.5rem; border-radius: 12px; text-align: center; margin-top: 0.5rem; transition: var(--transition);" id="dropArea">
+                    <svg width="48" height="48" fill="none" stroke="var(--brand-green)" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom: 1rem; opacity: 0.8;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem; font-weight: 500;">
+                        Drag & Drop your resume here or click to browse.
+                    </p>
+                    <input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('resume').click()">Browse Files</button>
+                    <p id="fileName" style="margin-top: 1rem; font-size: 0.9rem; color: var(--brand-green); font-weight: 600; display: none;"></p>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+                    If left blank, we will attempt to use the resume attached to your Profile.
+                </p>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="startBtn" style="width: 100%; padding: 1rem; font-size: 1.1rem; border-radius: 12px; margin-top: 1.5rem;">
+                Generate Mega Interview
+            </button>
+        </form>
+
+        <div id="loadingState" style="display: none; text-align: center; margin-top: 2rem;">
+            <div style="width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--brand-green); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1.5rem;"></div>
+            <h3 style="margin-bottom: 0.5rem;">AI is crafting your interview...</h3>
+            <p style="color: var(--text-secondary);">This takes about 15-20 seconds. We are analyzing your resume and generating hyper-personalized technical and coding questions.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const fileInput = document.getElementById('resume');
+        const fileName = document.getElementById('fileName');
+        const dropArea = document.getElementById('dropArea');
+        const form = document.getElementById('setupForm');
+        const loadingState = document.getElementById('loadingState');
+
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files.length > 0) {
+                fileName.textContent = this.files[0].name;
+                fileName.style.display = 'block';
+                dropArea.style.borderColor = 'var(--brand-green)';
+            }
+        });
+
+        form.addEventListener('submit', function(e) {
+            form.style.display = 'none';
+            loadingState.style.display = 'block';
+        });
+    });
+</script>
+{% endblock %}

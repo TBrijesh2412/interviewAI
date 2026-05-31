@@ -1,0 +1,706 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Interview AI - Master Your Next Interview{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Premium Landing Page Styles */
+    .landing-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 8rem; /* Increased spacing for premium feel */
+        padding-bottom: 6rem;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Infinite Marquee */
+    .marquee-container {
+        width: 100%;
+        overflow: hidden;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05) 50%, transparent);
+        padding: 2rem 0;
+        border-top: 1px solid var(--glass-border);
+        border-bottom: 1px solid var(--glass-border);
+        margin-top: 4rem;
+        position: relative;
+    }
+
+    html[data-theme="dark"] .marquee-container {
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.02) 50%, transparent);
+    }
+
+    .marquee-content {
+        display: flex;
+        width: 200%;
+        animation: marqueeScroll 20s linear infinite;
+        align-items: center;
+        gap: 4rem;
+    }
+
+    .marquee-item {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        opacity: 0.7;
+        transition: all 0.3s ease;
+    }
+
+    .marquee-item:hover {
+        opacity: 1;
+        color: var(--text-primary);
+        transform: scale(1.05);
+    }
+
+    .marquee-item svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    @keyframes marqueeScroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    /* Hero Section */
+    .hero {
+        text-align: center;
+        max-width: 900px;
+        margin: 4rem auto 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 0 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2.5rem !important;
+        }
+
+        .hero p {
+            font-size: 1.1rem !important;
+        }
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 40px;
+        background: rgba(var(--brand-green-rgb, 61, 90, 74), 0.1);
+        border: 1px solid rgba(var(--brand-green-rgb, 61, 90, 74), 0.2);
+        color: var(--brand-green);
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    html[data-theme="dark"] .hero-badge {
+        background: rgba(74, 222, 128, 0.1);
+        border-color: rgba(74, 222, 128, 0.2);
+        color: var(--brand-green);
+    }
+
+    .hero h1 {
+        font-size: clamp(3rem, 6vw, 5rem);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        color: var(--text-primary);
+    }
+
+    .hero p {
+        font-size: 1.25rem;
+        color: var(--text-muted);
+        max-width: 650px;
+        line-height: 1.6;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    /* Floating UI Elements Animation */
+    @keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+
+        100% {
+            transform: translateY(-20px);
+        }
+    }
+
+    .hero-graphic {
+        position: relative;
+        width: 100%;
+        height: 400px;
+        margin-top: 4rem;
+        perspective: 1000px;
+    }
+
+    .mock-window {
+        position: absolute;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-top: 1px solid var(--glass-border-shine);
+        border-left: 1px solid var(--glass-border-shine);
+        border-radius: 16px;
+        box-shadow: var(--glass-shadow);
+        padding: 1.5rem;
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+    }
+
+    .window-1 {
+        width: 450px;
+        left: 50%;
+        transform: translateX(-50%) rotateY(5deg) rotateX(5deg);
+        z-index: 2;
+    }
+
+    @media (max-width: 600px) {
+        .window-1 {
+            width: 90%;
+        }
+
+        .window-2,
+        .window-3 {
+            display: none;
+        }
+
+        .hero-graphic {
+            height: 300px;
+        }
+
+        #fox-wrap {
+            width: 280px !important;
+            height: 320px !important;
+        }
+    }
+
+    .window-2 {
+        width: 300px;
+        left: 10%;
+        top: 40px;
+        transform: rotateY(15deg) rotate(-5deg);
+        opacity: 0.9;
+        animation: float 6s infinite ease-in-out alternate;
+    }
+
+    .window-3 {
+        width: 250px;
+        right: 15%;
+        top: -20px;
+        transform: rotateY(-15deg) rotate(5deg);
+        opacity: 0.9;
+        animation: float 7s infinite ease-in-out alternate-reverse;
+    }
+
+    /* Bento Box Features */
+    .section-title {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, minmax(250px, auto));
+        gap: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 992px) {
+        .bento-grid {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto;
+        }
+
+        .bento-large {
+            grid-column: span 1;
+        }
+
+        .section-title h2 {
+            font-size: 2rem;
+        }
+    }
+
+    .bento-card {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        border-top: 1px solid var(--glass-border-shine);
+        border-left: 1px solid var(--glass-border-shine);
+        border-radius: 24px;
+        box-shadow: var(--glass-shadow);
+        padding: 3rem;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow: hidden;
+        position: relative;
+        z-index: 10;
+        transform-style: preserve-3d;
+    }
+
+    /* Glow effect on hover */
+    .bento-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 0%, rgba(251, 146, 60, 0.15), transparent 70%);
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        z-index: -1;
+    }
+
+    .bento-card:hover::after {
+        opacity: 1;
+    }
+
+    .bento-card:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .bento-card svg {
+        margin-bottom: 1.5rem;
+        color: var(--brand-orange);
+    }
+
+    .bento-card h3 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .bento-card p {
+        color: var(--text-muted);
+        line-height: 1.6;
+    }
+
+    .bento-large {
+        grid-column: span 2;
+    }
+
+    /* Pricing Section */
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 992px) {
+        .pricing-grid {
+            grid-template-columns: 1fr;
+            max-width: 450px;
+        }
+    }
+
+    .price-card {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        border-top: 1px solid var(--glass-border-shine);
+        border-left: 1px solid var(--glass-border-shine);
+        box-shadow: var(--glass-shadow);
+        border-radius: 24px;
+        padding: 3rem 2rem;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: var(--transition);
+    }
+
+    .price-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-premium);
+    }
+
+    .price-card.popular {
+        border: 2px solid var(--brand-orange);
+        background: linear-gradient(135deg, rgba(251, 146, 60, 0.1), var(--glass-bg));
+    }
+
+    .popular-badge {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--brand-orange);
+        color: white;
+        padding: 0.25rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .price-card h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .price {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+    }
+
+    .price span {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .feature-list {
+        list-style: none;
+        margin-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        flex: 1;
+    }
+
+    .feature-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .mock-ui-line {
+        height: 8px;
+        border-radius: 4px;
+        background: var(--bg-panel);
+        margin-bottom: 12px;
+    }
+
+    .mock-ui-line.highlight {
+        background: rgba(255, 124, 82, 0.2);
+        width: 60%;
+    }
+
+    @media (max-width: 900px) {
+        .bento-grid {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto;
+        }
+
+        .bento-large {
+            grid-column: span 1;
+        }
+
+        .pricing-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-graphic {
+            display: none;
+        }
+
+        .mascot-container {
+            width: 260px;
+            height: 260px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="landing-wrapper">
+    <!-- Hero Section -->
+    <section class="hero reveal reveal-up">
+        <div class="hero-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            Powered by Enterprise Llama 3 MLOps
+        </div>
+        <h1>Stop Guessing.<br>Start <span class="gradient-text">Mastering.</span></h1>
+        <p>Interview AI is a suite of professional intelligence tools including real-time voice simulation, ATS
+            optimization, and personalized RAG generation to land your dream role.</p>
+
+        <div class="hero-actions reveal reveal-up stagger-item" style="transition-delay: 0.3s">
+            {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="btn-premium">
+                <span class="btn-left">Go to Dashboard</span>
+                <span class="btn-right"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg></span>
+            </a>
+            {% else %}
+            <a href="{% url 'register' %}" class="btn-premium hover-glow">
+                <span class="btn-left" style="background: linear-gradient(90deg, var(--brand-orange), #f97316);">Start for Free</span>
+                <span class="btn-right" style="background: var(--brand-orange);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg></span>
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-secondary" style="padding: 0 1.5rem; backdrop-filter: blur(10px);">Sign In</a>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Infinite Marquee Section -->
+    <section class="marquee-container reveal reveal-up">
+        <div class="marquee-content">
+            <!-- Set 1 -->
+            <div class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Llama 3 MLOps</div>
+            <div class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> RAG Vector DB</div>
+            <div class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg> Whisper Speech-to-Text</div>
+            <div class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Scikit-Learn NLP</div>
+            <div class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Django Enterprise</div>
+            <!-- Set 2 (Duplicate for smooth looping) -->
+            <div class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Llama 3 MLOps</div>
+            <div class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> RAG Vector DB</div>
+            <div class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg> Whisper Speech-to-Text</div>
+            <div class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Scikit-Learn NLP</div>
+            <div class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Django Enterprise</div>
+        </div>
+    </section>
+
+    <!-- Interactive 3D Fox Mascot -->
+    <section class="reveal reveal-scale"
+        style="display:flex; justify-content:center; padding:2rem 0; position:relative;">
+        <!-- Floating particles -->
+        <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;"
+            viewBox="0 0 800 440">
+            <!-- Glowing Purple Box -->
+            <rect x="680" y="40" width="16" height="16" rx="4" fill="#c97fea" opacity="0.6">
+                <animateTransform attributeName="transform" type="translate" values="0 0; 0 -25; 0 0" dur="6s"
+                    repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.6; 0.9; 0.6" dur="6s" repeatCount="indefinite" />
+            </rect>
+            <!-- Glowing Green Box -->
+            <rect x="80" y="340" width="14" height="14" rx="4" fill="var(--brand-green)" opacity="0.6">
+                <animateTransform attributeName="transform" type="translate" values="0 0; 15 -12; 0 0" dur="5s"
+                    repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.6; 0.8; 0.6" dur="5s" repeatCount="indefinite" />
+            </rect>
+            <!-- Data Pulses (Small circles) -->
+            <circle cx="700" cy="220" r="5" fill="var(--brand-orange)">
+                <animate attributeName="r" values="3; 6; 3" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.2; 0.5; 0.2" dur="3s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="90" cy="80" r="4" fill="#c97fea">
+                <animate attributeName="r" values="2; 5; 2" dur="4s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.2; 0.4; 0.2" dur="4s" repeatCount="indefinite" />
+            </circle>
+        </svg>
+
+        <!-- Three.js fox canvas -->
+        <div id="fox-wrap"
+            style="position:relative; width:360px; height:400px; display:flex; align-items:center; justify-content:center;">
+            <div
+                style="position:absolute;inset:-30px;background:radial-gradient(ellipse at center, rgba(232,112,26,0.15) 0%, transparent 70%);border-radius:50%;pointer-events:none;">
+            </div>
+            <canvas id="fox-canvas" style="display:block; border-radius:16px;"></canvas>
+        </div>
+    </section>
+
+    <!-- Bento Features Grid -->
+    <section style="margin-top: 2rem;">
+        <div class="section-title reveal reveal-up">
+            <h2>Under the Hood</h2>
+            <p style="color: var(--text-muted); max-width: 600px; margin: 0.5rem auto 0;">Enterprise-grade machine
+                learning and natural language processing powering your career intelligence.</p>
+        </div>
+
+        <div class="bento-grid stagger-container">
+            <!-- RAG Pipeline -->
+            <div class="bento-card bento-large stagger-item" data-tilt data-tilt-max="3" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <h3>Resume-Driven RAG Context</h3>
+                <p>We use Retrieval-Augmented Generation to read your uploaded PDFs, extract core competencies, and
+                    dynamically inject them into the AI engine. You receive interview questions tailored specifically to
+                    your past projects, not generic internet lists.</p>
+            </div>
+
+            <!-- ATS Predictor -->
+            <div class="bento-card stagger-item" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <svg style="color: var(--brand-green);" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h3>Scikit-Learn ATS Logic</h3>
+                <p>Our ATS Score Predictor runs local Python ML pipelines combining TF-IDF vectorization and spaCy NLP
+                    to map exactly where your resume fails Applicant Tracking Systems.</p>
+            </div>
+
+            <!-- Whiteboard -->
+            <div class="bento-card stagger-item" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <svg style="color: var(--brand-purple);" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+                <h3>Live Code Evaluation</h3>
+                <p>A built-in Monaco IDE whiteboard evaluates your algorithms in real-time, checking for Time Complexity
+                    (Big O) and logical bugs just like a real engineering screen.</p>
+            </div>
+
+            <!-- Voice Mock -->
+            <div class="bento-card bento-large stagger-item" data-tilt data-tilt-max="3" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <svg style="color: #3b82f6;" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="22"></line>
+                </svg>
+                <h3>Real-Time Voice Simulation</h3>
+                <p>Turn on your microphone and talk to our AI in a realistic Voice-to-Text mock lobby. The system speaks
+                    back to you over the web audio API, providing real-time evaluation of your verbal confidence and
+                    behavioral framing.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing (Fake for Enterprise feel) -->
+    <section style="margin-top: 4rem;">
+        <div class="section-title reveal reveal-up">
+            <h2>Flexible Pricing</h2>
+            <p style="color: var(--text-muted); max-width: 600px; margin: 0.5rem auto 0;">Start practicing immediately
+                for free. Transparent pricing as your career scales.</p>
+        </div>
+
+        <div class="pricing-grid stagger-container">
+            <!-- Free -->
+            <div class="price-card stagger-item hover-3d">
+                <h3>Starter</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">For students & casual prep.
+                </p>
+                <div class="price">$0<span>/mo</span></div>
+                <a href="{% url 'register' %}" class="btn btn-secondary text-center"
+                    style="width: 100%; border: 1px solid var(--border-color);">Get Started</a>
+
+                <ul class="feature-list">
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> 5 Mock Interviews</li>
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> Basic ATS Scoring</li>
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> Profile Management</li>
+                </ul>
+            </div>
+
+            <!-- Pro -->
+            <div class="price-card popular stagger-item hover-3d">
+                <div class="popular-badge">Most Popular</div>
+                <h3>Professional</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">For serious job seekers.
+                </p>
+                <div class="price">$15<span>/mo</span></div>
+                <a href="{% url 'register' %}" class="btn btn-primary text-center" style="width: 100%;">Upgrade to
+                    Pro</a>
+
+                <ul class="feature-list">
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> Unlimited Voice Mock Interviews</li>
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> Semantic RAG Generation</li>
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> Advanced Scikit-Learn ATS Diagnostics</li>
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> AI Cover Letters</li>
+                </ul>
+            </div>
+
+            <!-- Enterprise -->
+            <div class="price-card stagger-item hover-3d">
+                <h3>Enterprise</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">For universities and
+                    bootcamps.</p>
+                <div class="price">$199<span>/mo</span></div>
+                <a href="#" class="btn btn-secondary text-center" style="width: 100%;">Contact Sales</a>
+
+                <ul class="feature-list">
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> White-labeled Dashboards</li>
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> API Access</li>
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> SSO Integration</li>
+                    <li><svg stroke="var(--success)" fill="none" stroke-width="2.5" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" height="18" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg> Student Progress Analytics</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'core/js/mascot.js' %}"></script>
+{% endblock %}

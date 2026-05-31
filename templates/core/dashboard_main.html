@@ -1,0 +1,519 @@
+{# VERIFIED FIXED VERSION #}
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — Interview AI{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dashboard-container {
+        max-width: 1300px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .welcome-header {
+        margin-bottom: 2.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    /* Stats */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-pill {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        position: relative;
+        z-index: 10;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        transition: var(--transition);
+        box-shadow: var(--shadow-premium);
+    }
+
+    .stat-pill:hover {
+        border-color: var(--border-hover);
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(255, 45, 120, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-primary);
+        flex-shrink: 0;
+    }
+
+    .stat-n {
+        font-size: 1.75rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        color: var(--text-primary);
+    }
+
+    .stat-desc {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-top: 0.2rem;
+    }
+
+    /* Controls */
+    .controls-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.75rem;
+    }
+
+    .sort-select {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* Grid */
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.75rem;
+    }
+
+    .report-card {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        position: relative;
+        z-index: 10;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 2rem;
+        transition: var(--transition);
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        box-shadow: var(--shadow-premium);
+    }
+
+    .report-card:hover {
+        transform: translateY(-6px);
+        border-color: var(--accent-primary);
+        box-shadow: var(--shadow-premium);
+    }
+
+    .report-card h3 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .report-meta {
+        font-size: 0.82rem;
+        color: var(--brand-orange);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .match-score-badge {
+        font-size: 0.75rem;
+        font-weight: 800;
+        padding: 0.4rem 1rem;
+        border-radius: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .score-high {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .score-mid {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .score-low {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .view-link {
+        color: var(--accent-primary);
+        font-weight: 700;
+        font-size: 0.88rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+    }
+
+    /* Card Actions */
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-panel);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+        color: var(--text-muted);
+    }
+
+    .action-btn:hover.delete-btn {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+    }
+
+    .action-btn:hover.mock-btn {
+        background: rgba(255, 45, 120, 0.1);
+        border-color: rgba(255, 45, 120, 0.2);
+        color: var(--accent-primary);
+    }
+
+    /* Delete Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-overlay.open {
+        display: flex;
+    }
+
+    .modal-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 2.5rem;
+        max-width: 420px;
+        width: 90%;
+        text-align: center;
+        animation: fadeInUp 0.3s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: rgba(239, 68, 68, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: #ef4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="welcome-header">
+        <div>
+            <p
+                style="color: var(--accent-primary); font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.1em; margin-bottom: 0.5rem;">
+                Overview</p>
+            <h1 style="font-size: 2.5rem; letter-spacing: -0.025em;">Welcome back, <span
+                    class="gradient-text">{{user.username}}</span></h1>
+            <p style="color: var(--brand-green); margin-top: 0.5rem;">Your AI-powered career intelligence hub.</p>
+        </div>
+        <a href="{% url 'create_report' %}" class="btn btn-primary" style="padding: 1rem 2rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            New Report
+        </a>
+    </div>
+
+    <!-- Quick Actions / Analyze URL -->
+    <!-- Quick Actions / Analyze URL -->
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-pill">
+            <div class="stat-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg></div>
+            <div>
+                <div class="stat-n">{{ analytics.total_reports }}</div>
+                <div class="stat-desc">Total Reports</div>
+            </div>
+        </div>
+        <div class="stat-pill">
+            <div class="stat-icon" style="background:rgba(139,92,246,0.1);color:var(--accent-secondary);"><svg
+                    xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg></div>
+            <div>
+                <div class="stat-n">{{ analytics.avg_score }}%</div>
+                <div class="stat-desc">Avg Match Score</div>
+            </div>
+        </div>
+        <div class="stat-pill">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--success);"><svg
+                    xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon
+                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                    </polygon>
+                </svg></div>
+            <div>
+                <div class="stat-n">{{ analytics.best_score }}%</div>
+                <div class="stat-desc">Best Score</div>
+            </div>
+        </div>
+    </div>
+
+    <section>
+        <div class="controls-row">
+            <h2
+                style="font-size: 1rem; color: var(--brand-orange); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;">
+                Recent Plans <span class="badge badge-accent" style="margin-left: 0.75rem;">{{ reports|length }}</span>
+            </h2>
+            <form method="GET" style="display:flex;align-items:center;gap:0.75rem;">
+                <label style="font-size:0.8rem;font-weight:600;color:var(--text-muted);">Sort by</label>
+                <select name="sort" class="sort-select" onchange="this.form.submit()">
+                    <option value="-created_at" {% if current_sort == "-created_at" %}selected{% endif %}>Newest First
+                    </option>
+                    <option value="created_at" {% if current_sort == "created_at" %}selected{% endif %}>Oldest First
+                    </option>
+                    <option value="-match_score" {% if current_sort == "-match_score" %}selected{% endif %}>Highest Score
+                    </option>
+                    <option value="match_score" {% if current_sort == "match_score" %}selected{% endif %}>Lowest Score
+                    </option>
+                </select>
+            </form>
+        </div>
+
+        <div class="reports-grid">
+            {% for report in reports %}
+            <div class="report-card" id="card-{{ report.id }}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <h3>{{ report.title }}</h3>
+                    <div
+                        class="match-score-badge {% if report.match_score >= 80 %}score-high{% elif report.match_score >= 60 %}score-mid{% else %}score-low{% endif %}">
+                        {{ report.match_score }}%
+                    </div>
+                </div>
+
+                <div class="report-meta">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2">
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </rect>
+                    </svg>
+                    {{ report.created_at|date:"M d, Y" }}
+                </div>
+
+                <div class="card-footer">
+                    <a href="{% url 'report_detail' report.id %}" class="view-link">
+                        View Report
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
+                    <div class="card-actions">
+                        <a href="{% url 'mock_interview_start' report.id %}" class="action-btn mock-btn"
+                            title="Start Mock Interview">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                        </a>
+                        <button class="action-btn delete-btn" title="Delete Report"
+                            data-id="{{ report.id }}" data-title="{{ report.title|escapejs }}"
+                            onclick="confirmDelete(this.dataset.id, this.dataset.title)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6l-1 14H6L5 6"></path>
+                                <path d="M10 11v6"></path>
+                                <path d="M14 11v6"></path>
+                                <path d="M9 6V4h6v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div
+                style="grid-column: 1 / -1; text-align: center; padding: 6rem 2rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; border-style: dashed;">
+                <div
+                    style="width:64px;height:64px;background:var(--bg-panel);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 2rem;color:var(--text-muted);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                </div>
+                <h3 style="margin-bottom:0.5rem;">No Reports Yet</h3>
+                <p style="color:var(--text-secondary);margin-bottom:2.5rem;">Generate your first AI-powered interview
+                    plan.</p>
+                <a href="{% url 'create_report' %}" class="btn btn-primary">Generate First Report</a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <div class="modal-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6l-1 14H6L5 6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+                <path d="M9 6V4h6v2"></path>
+            </svg>
+        </div>
+        <h2 style="font-size:1.25rem;margin-bottom:0.5rem;">Delete Report?</h2>
+        <p id="deleteModalTitle" style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:2rem;">"Report Name"
+        </p>
+        <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:2rem;">This action cannot be undone. All data
+            including mock sessions will be permanently deleted.</p>
+        <div style="display:flex;gap:1rem;justify-content:center;">
+            <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+            <button id="confirmDeleteBtn" class="btn"
+                style="background:linear-gradient(135deg,#ef4444,#b91c1c);color:white;border:none;"
+                onclick="executeDelete()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let reportToDelete = null;
+    const CSRF = "{{ csrf_token }}";
+
+    function confirmDelete(id, title) {
+        reportToDelete = id;
+        document.getElementById('deleteModalTitle').textContent = `"${title}"`;
+        document.getElementById('deleteModal').classList.add('open');
+    }
+
+    function closeModal() {
+        document.getElementById('deleteModal').classList.remove('open');
+        reportToDelete = null;
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.textContent = 'Delete';
+        btn.disabled = false;
+    }
+
+    async function executeDelete() {
+        if (!reportToDelete) return;
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.textContent = 'Deleting...';
+        btn.disabled = true;
+
+        const res = await fetch(`/report/${reportToDelete}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF }
+        });
+
+        if (res.ok) {
+            const card = document.getElementById(`card-${reportToDelete}`);
+            card.style.transition = 'all 0.4s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95)';
+            setTimeout(() => card.remove(), 400);
+            closeModal();
+        } else {
+            alert('Failed to delete. Try again.');
+            btn.textContent = 'Delete';
+            btn.disabled = false;
+        }
+    }
+
+    document.getElementById('deleteModal').addEventListener('click', function (e) {
+        if (e.target === this) closeModal();
+    });
+</script>
+{% endblock %}
